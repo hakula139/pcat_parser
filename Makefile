@@ -13,7 +13,10 @@ CXXFLAGS  := -g -Wall -O3 -std=c++17
 MKDIR     := mkdir -p
 RM        := rm -rf
 
-.PHONY: clean
+.PHONY: start clean
+
+start: $(BIN_DIR)/$(TARGET)
+	@$< $(INPUT)
 
 $(BIN_DIR)/$(TARGET): $(SRCS) $(LEX_OUT)
 	@echo + $@
