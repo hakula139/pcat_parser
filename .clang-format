@@ -1,0 +1,8 @@
+Language: Cpp
+BasedOnStyle: Google
+
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: false
+BinPackParameters: false
+PenaltyBreakAssignment: 60
+PenaltyBreakBeforeFirstCallParameter: 0
