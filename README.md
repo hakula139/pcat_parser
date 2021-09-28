@@ -1,6 +1,6 @@
 # lexical_analyzer
 
-A toy lexical analyzer for PCAT.
+A toy lexical analyzer for the PCAT language.
 
 ## Contributors
 
