@@ -1,6 +1,9 @@
 ## Customized
 
 .vscode/
+bin/
+build/
+lexer.cpp
 
 
 ## Cpp
