@@ -4,22 +4,19 @@
 #include <iostream>
 #include <memory>
 
+#include "io_buffer.hpp"
 #include "lexer.hpp"
 
+constexpr const char* output_path = "output/result.txt";
+
 int main(int argc, char** argv) {
-  auto yyin = &std::cin;
-  if (argc > 1) {
-    yyin = new std::ifstream{argv[1]};
-  }
-  auto lexer = std::make_unique<yyFlexLexer>(yyin);
+  const char* input_path = argc > 1 ? argv[1] : nullptr;
+  IOBuffer buf{input_path, output_path};
 
-  int c;
+  auto lexer = std::make_unique<yyFlexLexer>(buf.yyin(), buf.yyout());
+
+  int c = T_EOF;
   while ((c = lexer->yylex()) != T_EOF) {
-    std::cout << "Scanner: " << lexer->YYText() << "\n";
-  }
-
-  if (yyin && yyin != &std::cin) {
-    reinterpret_cast<std::ifstream*>(yyin)->close();
-    delete yyin;
+    buf.yyout() << "<" << lexer->YYText() << ">";
   }
 }

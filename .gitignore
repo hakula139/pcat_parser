@@ -3,6 +3,8 @@
 .vscode/
 bin/
 build/
+logs/
+output/
 lexer.cpp
 
 
