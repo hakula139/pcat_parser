@@ -4,6 +4,7 @@
 
 %option c++
 %option noyywrap
+%option yylineno
 
 WS                    ([ \t]+)
 NEWLINE               \r?\n
@@ -23,7 +24,7 @@ COMMENTS              ("(*".*"*)")
 
 %%
 {WS}                  /* skip whitespaces */
-{NEWLINE}             { ++yylineno; }
+{NEWLINE}             /* update line number */
 <<EOF>>               return T_EOF;
 
 {INTEGER}             return T_INTEGER;

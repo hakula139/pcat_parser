@@ -2,6 +2,7 @@ Language: Cpp
 BasedOnStyle: Google
 
 AlignAfterOpenBracket: AlwaysBreak
+AllowShortCaseLabelsOnASingleLine: true
 BinPackArguments: false
 BinPackParameters: false
 PenaltyBreakAssignment: 60
