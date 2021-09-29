@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <tuple>
 
 #include "config.hpp"
 #include "io_buffer.hpp"
@@ -42,7 +43,9 @@ int UpdateColumn(const yyFlexLexer& lexer) {
 }
 
 // NOLINTNEXTLINE(runtime/references)
-int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
+std::tuple<int, size_t> ReadToken(yyFlexLexer& lexer, std::ostream& output) {
+  static size_t token_count = 0;
+
   auto t = lexer.yylex();
   auto start_row = lexer.lineno();
   auto start_column = UpdateColumn(lexer);
@@ -68,8 +71,11 @@ int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
     output << std::setw(6) << start_column;
     output << std::setw(20) << type;
     output << token << "\n";
+
+    ++token_count;
   }
-  return t;
+
+  return {t, token_count};
 }
 
 int main(int argc, char** argv) {
@@ -85,9 +91,17 @@ int main(int argc, char** argv) {
 
     return IOBuffer{input_path.c_str(), output_path.c_str()};
   }();
+  auto& input = buf.yyin();
+  auto& output = buf.yyout();
 
-  auto p_lexer = std::make_unique<yyFlexLexer>(buf.yyin(), buf.yyout());
-  PrintColumnHeadings(buf.yyout());
-  while (ReadToken(*p_lexer, buf.yyout()) != T_EOF) {
+  auto p_lexer = std::make_unique<yyFlexLexer>(input, output);
+
+  PrintColumnHeadings(output);
+  while (true) {
+    auto [t, token_count] = ReadToken(*p_lexer, buf.yyout());
+    if (t == T_EOF) {
+      output << "\nTotal: " << token_count << " tokens\n";
+      break;
+    }
   }
 }
