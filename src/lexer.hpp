@@ -3,6 +3,8 @@
 
 enum Tokens {
   T_EOF,
+  T_WS,
+  T_NEWLINE,
   T_INTEGER,
   T_REAL,
   T_STRING,

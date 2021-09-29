@@ -1,4 +1,6 @@
+#ifndef yyFlexLexerOnce
 #include <FlexLexer.h>
+#endif
 
 #include <filesystem>
 #include <fstream>
@@ -14,16 +16,38 @@ namespace fs = std::filesystem;
 void PrintColumnHeadings(std::ostream& output) {
   output << std::left;
   output << std::setw(6) << "ROW";
+  output << std::setw(6) << "COL";
   output << std::setw(20) << "TYPE";
   output << "TOKEN\n";
   output << std::string(80, '-') << "\n";
 }
 
+int UpdateColumn(const yyFlexLexer& lexer) {
+  static int yycolumn = 1;  // self-maintained current column number
+  static int start_row = 1;
+  auto start_column = yycolumn;
+
+  auto token = lexer.YYText();
+  auto size = lexer.YYLeng();
+  if (lexer.lineno() == start_row) {
+    yycolumn += size;
+  } else {
+    for (yycolumn = 1; size >= yycolumn && token[size - yycolumn] != '\n';
+         ++yycolumn) {
+    }
+    start_row = lexer.lineno();
+  }
+
+  return start_column;
+}
+
 // NOLINTNEXTLINE(runtime/references)
 int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
   auto t = lexer.yylex();
-  if (t != T_EOF) {
-    auto row = lexer.lineno();
+  auto start_row = lexer.lineno();
+  auto start_column = UpdateColumn(lexer);
+
+  if (t != T_EOF && t != T_WS && t != T_NEWLINE) {
     auto type = [](int t) {
       switch (t) {
         case T_EOF: return "eof";
@@ -40,7 +64,8 @@ int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
     }(t);
     auto token = lexer.YYText();
 
-    output << std::setw(6) << row;
+    output << std::setw(6) << start_row;
+    output << std::setw(6) << start_column;
     output << std::setw(20) << type;
     output << token << "\n";
   }

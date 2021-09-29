@@ -23,9 +23,9 @@ DELIMITER             (":"|";"|","|"."|"("|")"|"["|"]"|"{"|"}"|"[<"|">]"|"\\")
 COMMENTS              ("(*".*"*)")
 
 %%
-{WS}                  /* skip whitespaces */
-{NEWLINE}             /* update line number */
 <<EOF>>               return T_EOF;
+{WS}                  return T_WS;
+{NEWLINE}             return T_NEWLINE;
 
 {INTEGER}             return T_INTEGER;
 {REAL}                return T_REAL;
