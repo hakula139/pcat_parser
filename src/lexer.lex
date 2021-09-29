@@ -13,7 +13,7 @@ DIGIT                 [0-9]
 INTEGER               ({DIGIT}+)
 REAL                  ({DIGIT}+"."{DIGIT}*)
 LETTER                [A-Za-z]
-STRING                (\"[^\t\n"]+\")
+STRING                (\"[^\t\n"]*\")
 
 RESERVED              (AND|ARRAY|BEGIN|BY|DIV|DO|ELSE|ELSIF|END|EXIT|FOR|IF|IN|IS|LOOP|MOD|NOT|OF|OR|OUT|PROCEDURE|PROGRAM|READ|RECORD|RETURN|THEN|TO|TYPE|VAR|WHILE|WRITE)
 IDENTIFIER            {LETTER}({LETTER}|{DIGIT})*
