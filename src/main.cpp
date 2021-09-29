@@ -19,7 +19,7 @@ void PrintColumnHeadings(std::ostream& output) {
   output << std::setw(6) << "ROW";
   output << std::setw(6) << "COL";
   output << std::setw(20) << "TYPE";
-  output << "TOKEN\n";
+  output << "TOKEN / ERROR MESSAGE\n";
   output << std::string(80, '-') << "\n";
 }
 
@@ -51,25 +51,32 @@ std::tuple<int, size_t> ReadToken(yyFlexLexer& lexer, std::ostream& output) {
   auto start_column = UpdateColumn(lexer);
 
   if (t != T_EOF && t != T_WS && t != T_NEWLINE) {
-    auto type = [](int t) {
+    auto [type, error_msg] = [](int t) -> std::tuple<const char*, const char*> {
       switch (t) {
-        case T_EOF: return "eof";
-        case T_INTEGER: return "integer";
-        case T_REAL: return "real";
-        case T_STRING: return "string";
-        case T_RESERVED: return "reserved keyword";
-        case T_IDENTIFIER: return "identifier";
-        case T_OPERATOR: return "operator";
-        case T_DELIMITER: return "delimiter";
-        case T_COMMENTS: return "comments";
-        default: return "unknown";
+        case T_EOF: return {"eof", NULL};
+        case T_INTEGER: return {"integer", NULL};
+        case T_REAL: return {"real", NULL};
+        case T_STRING: return {"string", NULL};
+        case T_RESERVED: return {"reserved keyword", NULL};
+        case T_IDENTIFIER: return {"identifier", NULL};
+        case T_OPERATOR: return {"operator", NULL};
+        case T_DELIMITER: return {"delimiter", NULL};
+        case T_COMMENTS: return {"comments", NULL};
+
+        case E_UNTERM_STRING:
+          return {"error", "SyntaxError: unterminated string literal"};
+        default: return {"error", "unknown error"};
       }
     }(t);
+
     auto token = lexer.YYText();
 
     output << std::setw(6) << start_row;
     output << std::setw(6) << start_column;
     output << std::setw(20) << type;
+    if (error_msg) {
+      output << error_msg << ": ";
+    }
     output << token << "\n";
 
     ++token_count;

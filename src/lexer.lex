@@ -13,7 +13,8 @@ DIGIT                 [0-9]
 INTEGER               ({DIGIT}+)
 REAL                  ({DIGIT}+"."{DIGIT}*)
 LETTER                [A-Za-z]
-STRING                (\"[^\t\n"]*\")
+STRING                (\"[^\n"]*\")
+UNTERM_STRING         (\"[^\n"]*)
 
 RESERVED              (AND|ARRAY|BEGIN|BY|DIV|DO|ELSE|ELSIF|END|EXIT|FOR|IF|IN|IS|LOOP|MOD|NOT|OF|OR|OUT|PROCEDURE|PROGRAM|READ|RECORD|RETURN|THEN|TO|TYPE|VAR|WHILE|WRITE)
 IDENTIFIER            {LETTER}({LETTER}|{DIGIT})*
@@ -30,6 +31,7 @@ COMMENTS              ("(*".*"*)")
 {INTEGER}             return T_INTEGER;
 {REAL}                return T_REAL;
 {STRING}              return T_STRING;
+{UNTERM_STRING}       return E_UNTERM_STRING;
 
 {RESERVED}            return T_RESERVED;
 {IDENTIFIER}          return T_IDENTIFIER;
