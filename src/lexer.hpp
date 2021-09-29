@@ -1,11 +1,16 @@
 #ifndef SRC_LEXER_HPP_
 #define SRC_LEXER_HPP_
 
-enum Terminals {
+enum Tokens {
   T_EOF,
-  NUMBER,
-  ADD,
-  SUB,
+  T_INTEGER,
+  T_REAL,
+  T_STRING,
+  T_RESERVED,
+  T_IDENTIFIER,
+  T_OPERATOR,
+  T_DELIMITER,
+  T_COMMENTS,
 };
 
 #endif  // SRC_LEXER_HPP_
