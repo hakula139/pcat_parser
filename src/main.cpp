@@ -93,6 +93,8 @@ int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
 
         case E_UNTERM_STRING:
           return {"error", "SyntaxError: unterminated string literal"};
+        case E_UNTERM_COMMENTS:
+          return {"error", "SyntaxError: unterminated comments"};
         case E_UNKNOWN_CHAR:
           return {"error", "CompileError: unknown character"};
         default: return {"error", "UnknownError"};
@@ -134,7 +136,8 @@ int main(int argc, char** argv) {
 
   PrintColumnHeadings(output);
   while (true) {
-    if (ReadToken(*p_lexer, buf.yyout()) == T_EOF) {
+    auto t = ReadToken(*p_lexer, buf.yyout());
+    if (t == T_EOF || t == E_UNTERM_COMMENTS) {
       PrintStatistics(output);
       break;
     }

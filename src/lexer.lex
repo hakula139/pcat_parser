@@ -6,6 +6,8 @@
 %option noyywrap
 %option yylineno
 
+%x      COMMENT
+
 WS                    ([ \t]+)
 NEWLINE               (\r?\n)
 
@@ -21,24 +23,28 @@ IDENTIFIER            {LETTER}({LETTER}|{DIGIT})*
 OPERATOR              (":="|"+"|"-"|"*"|"/"|"<"|"<="|">"|">="|"="|"<>")
 DELIMITER             (":"|";"|","|"."|"("|")"|"["|"]"|"{"|"}"|"[<"|">]"|"\\")
 
-COMMENTS              ("(*"([^*]|(\*[^)]))*"*)")
+COMMENTS_BEGIN        "(*"
+COMMENTS_END          "*)"
 
 %%
-<<EOF>>               return T_EOF;
-{WS}                  return T_WS;
-{NEWLINE}             return T_NEWLINE;
+<INITIAL><<EOF>>              return T_EOF;
+<INITIAL>{WS}                 return T_WS;
+<INITIAL>{NEWLINE}            return T_NEWLINE;
 
-{INTEGER}             return T_INTEGER;
-{REAL}                return T_REAL;
-{STRING}              return T_STRING;
-{UNTERM_STRING}       return E_UNTERM_STRING;
+<INITIAL>{INTEGER}            return T_INTEGER;
+<INITIAL>{REAL}               return T_REAL;
+<INITIAL>{STRING}             return T_STRING;
+<INITIAL>{UNTERM_STRING}      return E_UNTERM_STRING;
 
-{RESERVED}            return T_RESERVED;
-{IDENTIFIER}          return T_IDENTIFIER;
-{OPERATOR}            return T_OPERATOR;
-{DELIMITER}           return T_DELIMITER;
+<INITIAL>{RESERVED}           return T_RESERVED;
+<INITIAL>{IDENTIFIER}         return T_IDENTIFIER;
+<INITIAL>{OPERATOR}           return T_OPERATOR;
+<INITIAL>{DELIMITER}          return T_DELIMITER;
 
-{COMMENTS}            return T_COMMENTS;
+<INITIAL>{COMMENTS_BEGIN}     yymore(); BEGIN(COMMENT);
+<COMMENT>{COMMENTS_END}       BEGIN(INITIAL); return T_COMMENTS;
+<COMMENT>(.|{NEWLINE})        yymore();
+<COMMENT><<EOF>>              BEGIN(INITIAL); return E_UNTERM_COMMENTS;
 
-.                     return E_UNKNOWN_CHAR;
+<INITIAL>.                    return E_UNKNOWN_CHAR;
 %%

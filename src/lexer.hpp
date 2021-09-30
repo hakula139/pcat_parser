@@ -17,6 +17,7 @@ enum Tokens {
 
 enum Errors {
   E_UNTERM_STRING = 10000,
+  E_UNTERM_COMMENTS,
   E_UNKNOWN_CHAR,
 };
 
