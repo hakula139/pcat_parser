@@ -34,29 +34,30 @@ void PrintStatistics(std::ostream& output) {
   output << error_count << " errors\n";
 }
 
-int UpdateColumn(const yyFlexLexer& lexer) {
-  static int yycolumn = 1;  // self-maintained current column number
-  static int start_row = 1;
-  auto start_column = yycolumn;
+std::tuple<int, int> UpdatePosition(const yyFlexLexer& lexer) {
+  static int cur_row = 1;     // self-maintained current row number
+  static int cur_column = 1;  // self-maintained current column number
 
+  auto start_row = cur_row;
+  auto start_column = cur_column;
   std::string token = lexer.YYText();
   auto size = lexer.YYLeng();
+
   if (lexer.lineno() == start_row) {
-    yycolumn += size;
+    cur_column += size;
   } else {
+    cur_row = lexer.lineno();
     auto endl_pos = token.find_last_of('\n');
-    yycolumn = endl_pos == std::string::npos ? size : size - endl_pos;
-    start_row = lexer.lineno();
+    cur_column = endl_pos == std::string::npos ? size : size - endl_pos;
   }
 
-  return start_column;
+  return {start_row, start_column};
 }
 
 // NOLINTNEXTLINE(runtime/references)
 int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
   auto t = lexer.yylex();
-  auto start_row = lexer.lineno();
-  auto start_column = UpdateColumn(lexer);
+  auto [start_row, start_column] = UpdatePosition(lexer);
 
   if (t != T_EOF && t != T_WS && t != T_NEWLINE) {
     std::string token = lexer.YYText();
@@ -73,14 +74,19 @@ int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
         case T_REAL: return {"real", NULL};
         case T_STRING: {
           if (token.size() > 257) {
-            return {"error", "ValueError: string literal too long"};
+            return {"error", "ValueError: string literal is too long"};
           } else if (token.find('\t') != std::string::npos) {
             return {"error", "ValueError: invalid character found in string"};
           }
           return {"string", NULL};
         }
         case T_RESERVED: return {"reserved keyword", NULL};
-        case T_IDENTIFIER: return {"identifier", NULL};
+        case T_IDENTIFIER: {
+          if (token.size() > 255) {
+            return {"error", "CompileError: identifier is too long"};
+          }
+          return {"identifier", NULL};
+        }
         case T_OPERATOR: return {"operator", NULL};
         case T_DELIMITER: return {"delimiter", NULL};
         case T_COMMENTS: return {"comments", NULL};

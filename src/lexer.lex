@@ -7,7 +7,7 @@
 %option yylineno
 
 WS                    ([ \t]+)
-NEWLINE               \r?\n
+NEWLINE               (\r?\n)
 
 DIGIT                 [0-9]
 INTEGER               ({DIGIT}+)
@@ -21,7 +21,7 @@ IDENTIFIER            {LETTER}({LETTER}|{DIGIT})*
 OPERATOR              (":="|"+"|"-"|"*"|"/"|"<"|"<="|">"|">="|"="|"<>")
 DELIMITER             (":"|";"|","|"."|"("|")"|"["|"]"|"{"|"}"|"[<"|">]"|"\\")
 
-COMMENTS              ("(*".*"*)")
+COMMENTS              ("(*"([^*]|(\*[^)]))*"*)")
 
 %%
 <<EOF>>               return T_EOF;
