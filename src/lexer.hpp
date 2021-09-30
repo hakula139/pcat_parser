@@ -12,7 +12,9 @@ enum Tokens {
   T_IDENTIFIER,
   T_OPERATOR,
   T_DELIMITER,
+  T_COMMENTS_BEGIN,
   T_COMMENTS,
+  T_COMMENTS_END,
 };
 
 enum Errors {

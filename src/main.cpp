@@ -56,61 +56,89 @@ std::tuple<int, int> UpdatePosition(const yyFlexLexer& lexer) {
 
 // NOLINTNEXTLINE(runtime/references)
 int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
+  static std::string buf;  // self-maintained buffer for comments
+  static int start_row_bak = 1;
+  static int start_column_bak = 1;
+
   auto t = lexer.yylex();
   auto [start_row, start_column] = UpdatePosition(lexer);
+  std::string token = lexer.YYText();
 
-  if (t != T_EOF && t != T_WS && t != T_NEWLINE) {
-    std::string token = lexer.YYText();
+  switch (t) {
+    case T_EOF:
+    case T_WS:
+    case T_NEWLINE: break;  // skip whitespaces
 
-    auto [type, error_msg] =
-        [&token](int t) -> std::tuple<const char*, const char*> {
-      switch (t) {
-        case T_INTEGER: {
-          if (token.size() > 10 || std::stoull(token) > INT32_MAX) {
-            return {"error", "RangeError: out of range"};
-          }
-          return {"integer", NULL};
-        }
-        case T_REAL: return {"real", NULL};
-        case T_STRING: {
-          if (token.size() > 257) {
-            return {"error", "ValueError: string literal is too long"};
-          } else if (token.find('\t') != std::string::npos) {
-            return {"error", "ValueError: invalid character found in string"};
-          }
-          return {"string", NULL};
-        }
-        case T_RESERVED: return {"reserved keyword", NULL};
-        case T_IDENTIFIER: {
-          if (token.size() > 255) {
-            return {"error", "CompileError: identifier is too long"};
-          }
-          return {"identifier", NULL};
-        }
-        case T_OPERATOR: return {"operator", NULL};
-        case T_DELIMITER: return {"delimiter", NULL};
-        case T_COMMENTS: return {"comments", NULL};
-
-        case E_UNTERM_STRING:
-          return {"error", "SyntaxError: unterminated string literal"};
-        case E_UNTERM_COMMENTS:
-          return {"error", "SyntaxError: unterminated comments"};
-        case E_UNKNOWN_CHAR:
-          return {"error", "CompileError: unknown character"};
-        default: return {"error", "UnknownError"};
-      }
-    }(t);
-
-    output << std::setw(6) << start_row;
-    output << std::setw(6) << start_column;
-    output << std::setw(20) << type;
-    if (error_msg) {
-      output << error_msg << ": ";
-      ++error_count;
-    } else {
-      ++token_count;
+    case T_COMMENTS_BEGIN: {
+      start_row_bak = start_row;
+      start_column_bak = start_column;
+      // fallthrough
     }
-    output << token << "\n";
+    case T_COMMENTS: {
+      buf += token;
+      break;
+    }
+    case E_UNTERM_COMMENTS:
+    case T_COMMENTS_END: {
+      // Use the actual starting position of T_COMMENTS_BEGIN.
+      start_row = start_row_bak;
+      start_column = start_column_bak;
+      token = buf + token;
+      buf.clear();
+      // fallthrough
+    }
+
+    default: {
+      auto [type, error_msg] =
+          [&token](int t) -> std::tuple<const char*, const char*> {
+        switch (t) {
+          case T_INTEGER: {
+            if (token.size() > 10 || std::stoull(token) > INT32_MAX) {
+              return {"error", "RangeError: out of range"};
+            }
+            return {"integer", NULL};
+          }
+          case T_REAL: return {"real", NULL};
+          case T_STRING: {
+            if (token.size() > 257) {
+              return {"error", "ValueError: string literal is too long"};
+            } else if (token.find('\t') != std::string::npos) {
+              return {"error", "ValueError: invalid character found in string"};
+            }
+            return {"string", NULL};
+          }
+          case T_RESERVED: return {"reserved keyword", NULL};
+          case T_IDENTIFIER: {
+            if (token.size() > 255) {
+              return {"error", "CompileError: identifier is too long"};
+            }
+            return {"identifier", NULL};
+          }
+          case T_OPERATOR: return {"operator", NULL};
+          case T_DELIMITER: return {"delimiter", NULL};
+          case T_COMMENTS_END: return {"comments", NULL};
+
+          case E_UNTERM_STRING:
+            return {"error", "SyntaxError: unterminated string literal"};
+          case E_UNTERM_COMMENTS:
+            return {"error", "SyntaxError: unterminated comments"};
+          case E_UNKNOWN_CHAR:
+            return {"error", "CompileError: unknown character"};
+          default: return {"error", "UnknownError"};
+        }
+      }(t);
+
+      output << std::setw(6) << start_row;
+      output << std::setw(6) << start_column;
+      output << std::setw(20) << type;
+      if (error_msg) {
+        output << error_msg << ": ";
+        ++error_count;
+      } else {
+        ++token_count;
+      }
+      output << token << "\n";
+    }
   }
 
   return t;

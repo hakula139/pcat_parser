@@ -41,10 +41,10 @@ COMMENTS_END          "*)"
 <INITIAL>{OPERATOR}           return T_OPERATOR;
 <INITIAL>{DELIMITER}          return T_DELIMITER;
 
-<INITIAL>{COMMENTS_BEGIN}     yymore(); BEGIN(COMMENT);
-<COMMENT>{COMMENTS_END}       BEGIN(INITIAL); return T_COMMENTS;
-<COMMENT>(.|{NEWLINE})        yymore();
-<COMMENT><<EOF>>              BEGIN(INITIAL); return E_UNTERM_COMMENTS;
+<INITIAL>{COMMENTS_BEGIN}     BEGIN(COMMENT); return T_COMMENTS_BEGIN;
+<COMMENT>{COMMENTS_END}       BEGIN(INITIAL); return T_COMMENTS_END;
+<COMMENT>(.|{NEWLINE})        return T_COMMENTS;
+<COMMENT><<EOF>>              return E_UNTERM_COMMENTS;
 
 <INITIAL>.                    return E_UNKNOWN_CHAR;
 %%
