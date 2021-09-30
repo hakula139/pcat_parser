@@ -2,6 +2,8 @@
 
 A toy lexical analyzer for the PCAT language.
 
+[中文项目报告](./docs/report.md)
+
 ## Contributors
 
 - [**Hakula Chen**](https://github.com/hakula139)<[i@hakula.xyz](mailto:i@hakula.xyz)> - Fudan University
