@@ -39,4 +39,6 @@ COMMENTS              ("(*".*"*)")
 {DELIMITER}           return T_DELIMITER;
 
 {COMMENTS}            return T_COMMENTS;
+
+.                     return E_UNKNOWN_CHAR;
 %%

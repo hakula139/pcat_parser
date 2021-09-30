@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <tuple>
 
 #include "config.hpp"
@@ -13,6 +14,9 @@
 #include "lexer.hpp"
 
 namespace fs = std::filesystem;
+
+static size_t token_count = 0;
+static size_t error_count = 0;
 
 void PrintColumnHeadings(std::ostream& output) {
   output << std::left;
@@ -23,19 +27,25 @@ void PrintColumnHeadings(std::ostream& output) {
   output << std::string(80, '-') << "\n";
 }
 
+void PrintStatistics(std::ostream& output) {
+  output << std::string(80, '-') << "\n";
+  output << "\nTotal: ";
+  output << token_count << " tokens, ";
+  output << error_count << " errors\n";
+}
+
 int UpdateColumn(const yyFlexLexer& lexer) {
   static int yycolumn = 1;  // self-maintained current column number
   static int start_row = 1;
   auto start_column = yycolumn;
 
-  auto token = lexer.YYText();
+  std::string token = lexer.YYText();
   auto size = lexer.YYLeng();
   if (lexer.lineno() == start_row) {
     yycolumn += size;
   } else {
-    for (yycolumn = 1; size >= yycolumn && token[size - yycolumn] != '\n';
-         ++yycolumn) {
-    }
+    auto endl_pos = token.find_last_of('\n');
+    yycolumn = endl_pos == std::string::npos ? size : size - endl_pos;
     start_row = lexer.lineno();
   }
 
@@ -43,20 +53,32 @@ int UpdateColumn(const yyFlexLexer& lexer) {
 }
 
 // NOLINTNEXTLINE(runtime/references)
-std::tuple<int, size_t> ReadToken(yyFlexLexer& lexer, std::ostream& output) {
-  static size_t token_count = 0;
-
+int ReadToken(yyFlexLexer& lexer, std::ostream& output) {
   auto t = lexer.yylex();
   auto start_row = lexer.lineno();
   auto start_column = UpdateColumn(lexer);
 
   if (t != T_EOF && t != T_WS && t != T_NEWLINE) {
-    auto [type, error_msg] = [](int t) -> std::tuple<const char*, const char*> {
+    std::string token = lexer.YYText();
+
+    auto [type, error_msg] =
+        [&token](int t) -> std::tuple<const char*, const char*> {
       switch (t) {
-        case T_EOF: return {"eof", NULL};
-        case T_INTEGER: return {"integer", NULL};
+        case T_INTEGER: {
+          if (token.size() > 10 || std::stoull(token) > INT32_MAX) {
+            return {"error", "RangeError: out of range"};
+          }
+          return {"integer", NULL};
+        }
         case T_REAL: return {"real", NULL};
-        case T_STRING: return {"string", NULL};
+        case T_STRING: {
+          if (token.size() > 257) {
+            return {"error", "ValueError: string literal too long"};
+          } else if (token.find('\t') != std::string::npos) {
+            return {"error", "ValueError: invalid character found in string"};
+          }
+          return {"string", NULL};
+        }
         case T_RESERVED: return {"reserved keyword", NULL};
         case T_IDENTIFIER: return {"identifier", NULL};
         case T_OPERATOR: return {"operator", NULL};
@@ -65,24 +87,25 @@ std::tuple<int, size_t> ReadToken(yyFlexLexer& lexer, std::ostream& output) {
 
         case E_UNTERM_STRING:
           return {"error", "SyntaxError: unterminated string literal"};
-        default: return {"error", "unknown error"};
+        case E_UNKNOWN_CHAR:
+          return {"error", "CompileError: unknown character"};
+        default: return {"error", "UnknownError"};
       }
     }(t);
-
-    auto token = lexer.YYText();
 
     output << std::setw(6) << start_row;
     output << std::setw(6) << start_column;
     output << std::setw(20) << type;
     if (error_msg) {
       output << error_msg << ": ";
+      ++error_count;
+    } else {
+      ++token_count;
     }
     output << token << "\n";
-
-    ++token_count;
   }
 
-  return {t, token_count};
+  return t;
 }
 
 int main(int argc, char** argv) {
@@ -105,9 +128,8 @@ int main(int argc, char** argv) {
 
   PrintColumnHeadings(output);
   while (true) {
-    auto [t, token_count] = ReadToken(*p_lexer, buf.yyout());
-    if (t == T_EOF) {
-      output << "\nTotal: " << token_count << " tokens\n";
+    if (ReadToken(*p_lexer, buf.yyout()) == T_EOF) {
+      PrintStatistics(output);
       break;
     }
   }
