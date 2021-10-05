@@ -1,8 +1,10 @@
 # lexical_analyzer
 
+[![wakatime](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/b645c02d-da46-4ea1-a962-5891666415f5.svg)](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/b645c02d-da46-4ea1-a962-5891666415f5)
+
 A toy lexical analyzer for the PCAT language.
 
-[中文项目报告](./docs/report.md)
+[中文报告](./docs/report.md)
 
 ## Contributors
 

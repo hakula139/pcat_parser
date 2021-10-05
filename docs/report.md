@@ -1,5 +1,7 @@
 # PCAT 词法分析
 
+[![wakatime](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/b645c02d-da46-4ea1-a962-5891666415f5.svg)](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/b645c02d-da46-4ea1-a962-5891666415f5)
+
 本项目利用 Flex (fast lexical analyzer generator)，实现了对给定 PCAT 语言样例的词法分析。
 
 ## 目录
@@ -19,6 +21,10 @@
           - [1.3.3.2 字符串错误](#1332-字符串错误)
           - [1.3.3.3 标识符错误](#1333-标识符错误)
           - [1.3.3.4 注释错误](#1334-注释错误)
+    - [2. 运行本项目](#2-运行本项目)
+      - [2.1 依赖](#21-依赖)
+      - [2.2 构建与运行](#22-构建与运行)
+      - [2.3 测试](#23-测试)
   - [贡献者](#贡献者)
   - [许可协议](#许可协议)
   
@@ -410,6 +416,105 @@ switch (t) {
   - 对于 `E_UNTERM_COMMENTS` 的情况，说明注释未闭合，进行报错
 
 至此，所有词法错误的报错功能就都实现完了。
+
+### 2. 运行本项目
+
+#### 2.1 依赖
+
+在构建本项目前，你需要安装以下依赖。
+
+- [GNU make](https://www.gnu.org/software/make) 4.0 或以上
+- [GCC](https://gcc.gnu.org/releases.html) 9.0 或以上（以支持 C++17 特性）
+- [Flex](https://github.com/westes/flex) 2.6.4（其他版本未测试）
+
+#### 2.2 构建与运行
+
+本项目使用 Makefile 组织，因此在根目录执行 `make` 即可构建并运行本项目。对于 Windows，可以使用 [MinGW-w64](http://mingw-w64.org/doku.php/download)，然后执行 `mingw32-make`，也可以使用 WSL（推荐）。
+
+这里执行 `make` 默认是进入命令行交互模式，按 `CTRL + D` 退出。如果需要从文件中读入，则需要执行 `make INPUT=<path>`，其中 `<path>` 即为指定的文件路径。例如：
+
+```bash
+make INPUT="tests/case_1.pcat"
+```
+
+输出文件将默认保存在 `output` 目录下。
+
+#### 2.3 测试
+
+本项目自带了 14 个 PCAT 语言测试样例，位于 `tests` 目录下。测试时依次通过上述命令处理即可。
+
+例如对于这样的输入（`tests/case_1.pcat`）：
+
+```text {.line-numbers}
+PROGRAM IS
+    VAR i, j : INTEGER := 1; 
+    VAR x : REAL := 2.0;
+    VAR y : REAL := 3.0;
+BEGIN 
+    WRITE ("i = ", i, ", j = ", j);
+    WRITE ("x = ", x, ", y = ", y);
+END;
+```
+
+就将得到这样的输出：
+
+```text {.line-numbers}
+ROW   COL   TYPE                TOKEN / ERROR MESSAGE
+--------------------------------------------------------------------------------
+1     1     reserved keyword    PROGRAM
+1     9     reserved keyword    IS
+2     5     reserved keyword    VAR
+2     9     identifier          i
+2     10    delimiter           ,
+2     12    identifier          j
+2     14    delimiter           :
+2     16    identifier          INTEGER
+2     24    operator            :=
+2     27    integer             1
+2     28    delimiter           ;
+3     5     reserved keyword    VAR
+3     9     identifier          x
+3     11    delimiter           :
+3     13    identifier          REAL
+3     18    operator            :=
+3     21    real                2.0
+3     24    delimiter           ;
+4     5     reserved keyword    VAR
+4     9     identifier          y
+4     11    delimiter           :
+4     13    identifier          REAL
+4     18    operator            :=
+4     21    real                3.0
+4     24    delimiter           ;
+5     1     reserved keyword    BEGIN
+6     5     reserved keyword    WRITE
+6     11    delimiter           (
+6     12    string              "i = "
+6     18    delimiter           ,
+6     20    identifier          i
+6     21    delimiter           ,
+6     23    string              ", j = "
+6     31    delimiter           ,
+6     33    identifier          j
+6     34    delimiter           )
+6     35    delimiter           ;
+7     5     reserved keyword    WRITE
+7     11    delimiter           (
+7     12    string              "x = "
+7     18    delimiter           ,
+7     20    identifier          x
+7     21    delimiter           ,
+7     23    string              ", y = "
+7     31    delimiter           ,
+7     33    identifier          y
+7     34    delimiter           )
+7     35    delimiter           ;
+8     1     reserved keyword    END
+8     4     delimiter           ;
+--------------------------------------------------------------------------------
+
+Total: 50 tokens, 0 errors
+```
 
 ## 贡献者
 
