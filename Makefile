@@ -1,4 +1,4 @@
-TARGET    := lexer
+TARGET    := parser
 
 BIN_DIR   := bin
 BUILD_DIR := build
@@ -7,10 +7,15 @@ OUT_DIR   := output
 
 LEX_IN    := $(SRC_DIR)/lexer.lex
 LEX_SRC   := $(LEX_IN:%.lex=%.cpp)
-SRCS      := $(shell find $(SRC_DIR) -name *.cpp) $(LEX_SRC)
+
+YACC_IN   := $(SRC_DIR)/yacc.yy
+YACC_SRC  := $(YACC_IN:%.yy=%.cpp)
+
+SRCS      := $(shell find $(SRC_DIR) -name *.cpp) $(YACC_SRC)
 OBJS      := $(SRCS:%=$(BUILD_DIR)/%.o)
 
 LEX       := flex
+YACC      := bison
 CXX       := g++
 CXXFLAGS  := -g -Wall -O3 -std=c++17
 MKDIR     := mkdir -p
@@ -36,5 +41,9 @@ $(LEX_SRC): $(LEX_IN)
 	@echo + $@
 	@$(LEX) -o $@ $<
 
+$(YACC_SRC): $(YACC_IN)
+	@echo + $@
+	@$(YACC) -o $@ -d $<
+
 clean:
-	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC)
+	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRC)
