@@ -1,7 +1,7 @@
 #include <filesystem>  // fs::path
 
 #include "config.hpp"
-#include "interpreter.hpp"
+#include "driver.hpp"
 #include "io_buffer.hpp"
 #include "logger.hpp"
 
@@ -22,9 +22,8 @@ int main(int argc, char** argv) {
     return IOBuffer{IN_PATH.c_str(), OUT_PATH.c_str()};
   }();
 
-  Interpreter i{buf.input(), buf.output()};
-
-  int ret = i.Parse();
+  Driver drv;
+  int ret = drv.Parse();
   Logger::Info("parse complete, return code: " + std::to_string(ret));
   return ret;
 }

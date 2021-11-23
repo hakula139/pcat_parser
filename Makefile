@@ -8,7 +8,7 @@ OUT_DIR   := output
 LEX_IN    := $(SRC_DIR)/lexer.lex
 LEX_SRC   := $(LEX_IN:%.lex=%.cpp)
 
-YACC_IN   := $(SRC_DIR)/yacc.yy
+YACC_IN   := $(SRC_DIR)/parser.yy
 YACC_SRC  := $(YACC_IN:%.yy=%.cpp)
 
 SRCS      := $(shell find $(SRC_DIR) -name *.cpp) $(YACC_SRC)
