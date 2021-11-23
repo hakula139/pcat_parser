@@ -6,16 +6,16 @@
 
 class IOBuffer {
  public:
-  explicit IOBuffer(
-      const char* input_path = nullptr, const char* output_path = nullptr);
+  IOBuffer() {}
+  IOBuffer(const char* input_path, const char* output_path);
   ~IOBuffer();
 
-  std::istream& yyin() { return *yyin_; }
-  std::ostream& yyout() { return *yyout_; }
+  std::istream& input() const { return *p_input_; }
+  std::ostream& output() const { return *p_output_; }
 
  protected:
-  std::istream* const yyin_ = &std::cin;
-  std::ostream* const yyout_ = &std::cout;
+  std::istream* const p_input_ = &std::cin;
+  std::ostream* const p_output_ = &std::cout;
 };
 
 #endif  // SRC_IO_BUFFER_HPP_
