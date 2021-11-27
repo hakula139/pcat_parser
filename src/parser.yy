@@ -93,7 +93,7 @@
   BACKSLASH           "\\"
 
   // Constants
-  <uint64_t>          INTEGER             "integer"
+  <int32_t>           INTEGER             "integer"
   <double>            REAL                "real"
   <std::string>       STRING              "string"
 
