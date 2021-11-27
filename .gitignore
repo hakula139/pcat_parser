@@ -6,6 +6,9 @@ build/
 logs/
 output/
 lexer.cpp
+location.hpp
+parser.hpp
+parser.cpp
 
 
 ## Cpp
