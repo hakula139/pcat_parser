@@ -6,10 +6,11 @@ SRC_DIR   := src
 OUT_DIR   := output
 
 LEX_IN    := $(SRC_DIR)/lexer.lex
-LEX_SRC   := $(LEX_IN:%.lex=%.cpp)
+LEX_SRC   := $(SRC_DIR)/lexer.cpp
 
 YACC_IN   := $(SRC_DIR)/parser.yy
-YACC_SRC  := $(YACC_IN:%.yy=%.cpp)
+YACC_SRC  := $(SRC_DIR)/parser.cpp
+YACC_SRCS := $(SRC_DIR)/location.hpp $(SRC_DIR)/parser.hpp $(SRC_DIR)/parser.cpp
 
 SRCS      := $(shell find $(SRC_DIR) -name *.cpp) $(YACC_SRC)
 OBJS      := $(SRCS:%=$(BUILD_DIR)/%.o)
@@ -46,4 +47,4 @@ $(YACC_SRC): $(YACC_IN)
 	@$(YACC) -o $@ -d $<
 
 clean:
-	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRC)
+	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRCS)
