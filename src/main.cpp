@@ -1,9 +1,9 @@
 #include <filesystem>  // fs::path
 
-#include "config.hpp"
+#include "base/config.hpp"
 #include "driver.hpp"
-#include "io_buffer.hpp"
-#include "logger.hpp"
+#include "utils/io_buffer.hpp"
+#include "utils/logger.hpp"
 
 namespace fs = std::filesystem;
 
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   }();
 
   Driver drv;
-  int ret = drv.Parse();
+  int ret = drv.Parse(buf.input(), buf.output());
   Logger::Info("parse complete, return code: " + std::to_string(ret));
   return ret;
 }

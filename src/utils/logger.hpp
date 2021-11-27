@@ -1,5 +1,5 @@
-#ifndef SRC_LOGGER_HPP_
-#define SRC_LOGGER_HPP_
+#ifndef SRC_UTILS_LOGGER_HPP_
+#define SRC_UTILS_LOGGER_HPP_
 
 #include <iostream>
 #include <string>
@@ -15,4 +15,4 @@ class Logger {
   static void Log(const std::string& msg, std::ostream& output = std::cout);
 };
 
-#endif  // SRC_LOGGER_HPP_
+#endif  // SRC_UTILS_LOGGER_HPP_

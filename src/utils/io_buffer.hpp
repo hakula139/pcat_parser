@@ -1,5 +1,5 @@
-#ifndef SRC_IO_BUFFER_HPP_
-#define SRC_IO_BUFFER_HPP_
+#ifndef SRC_UTILS_IO_BUFFER_HPP_
+#define SRC_UTILS_IO_BUFFER_HPP_
 
 #include <fstream>
 #include <iostream>
@@ -18,4 +18,4 @@ class IOBuffer {
   std::ostream* const p_output_ = &std::cout;
 };
 
-#endif  // SRC_IO_BUFFER_HPP_
+#endif  // SRC_UTILS_IO_BUFFER_HPP_
