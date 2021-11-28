@@ -1,26 +1,31 @@
 #ifndef SRC_LEXER_HPP_
 #define SRC_LEXER_HPP_
 
-enum Tokens {
-  T_EOF = 0,
-  T_WS,
-  T_NEWLINE,
-  T_INTEGER,
-  T_REAL,
-  T_STRING,
-  T_RESERVED,
-  T_IDENTIFIER,
-  T_OPERATOR,
-  T_DELIMITER,
-  T_COMMENTS_BEGIN,
-  T_COMMENTS,
-  T_COMMENTS_END,
-};
+#include <fstream>
 
-enum Errors {
-  E_UNTERM_STRING = 10000,
-  E_UNTERM_COMMENTS,
-  E_UNKNOWN_CHAR,
+#ifndef yyFlexLexerOnce
+#include <FlexLexer.h>
+#endif
+
+#include "parser.hpp"
+
+// Override the default yylex() to return a symbol_type instead of int.
+#define YY_DECL yy::Parser::symbol_type yy::Lexer::ReadToken()
+
+class Driver;
+
+namespace yy {
+class Lexer : public yyFlexLexer {
+ public:
+  explicit Lexer(Driver* p_drv) : drv_{*p_drv} {}
+
+  virtual yy::Parser::symbol_type ReadToken();
+
+  yy::Parser::symbol_type operator()() { return ReadToken(); }
+
+ protected:
+  Driver& drv_;
 };
+}  // namespace yy
 
 #endif  // SRC_LEXER_HPP_
