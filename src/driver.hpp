@@ -1,34 +1,32 @@
 #ifndef SRC_DRIVER_HPP_
 #define SRC_DRIVER_HPP_
 
-#include <map>
 #include <memory>  // std::unique_ptr
 #include <string>
 
 #include "base/config.hpp"
+#include "lexer.hpp"
 #include "parser.hpp"
-
-// Define the signature of yylex() to return a symbol_type instead of int.
-// NOLINTNEXTLINE(runtime/references)
-#define YY_DECL yy::Parser::symbol_type yylex(Driver& drv)
-YY_DECL;
 
 class Body;
 
 class Driver {
  public:
-  int Parse(const std::string& input, const std::string& output);
-  void ScanBegin();
-  void ScanEnd();
+  Driver();
 
-  yy::location& loc() { return loc_; }
+  int Parse(const std::string& in_path, const std::string& out_path);
 
- private:
-  bool trace_parsing_ = LOG_LEVEL <= DEBUG;
-  bool trace_scanning_ = LOG_LEVEL <= DEBUG;
+  yy::Parser::location_type& loc() { return loc_; }
+
+ protected:
+  yy::Lexer lexer_;
+  yy::Parser parser_;
 
   std::unique_ptr<Body> p_program_;
-  yy::location loc_;
+  yy::Parser::location_type loc_;
+
+  bool trace_parsing_ = LOG_LEVEL <= DEBUG;
+  bool trace_scanning_ = LOG_LEVEL <= DEBUG;
 };
 
 #endif  // SRC_DRIVER_HPP_

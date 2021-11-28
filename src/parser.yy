@@ -27,7 +27,7 @@
   class Driver;
 }
 
-%param { Driver& drv }
+%param { Driver* p_drv }
 
 %define api.token.prefix {T_}
 %token

@@ -1,15 +1,21 @@
 #include "driver.hpp"
 
+#include <fstream>
+#include <memory>  // std::make_unique
 #include <string>
 
 #include "parser.hpp"
 
-int Driver::Parse(const std::string& input, const std::string& output) {
-  loc_.initialize(&input);
-  ScanBegin();
-  yy::Parser parser{*this};
-  parser.set_debug_level(trace_parsing_);
-  int res = parser();
-  ScanEnd();
+Driver::Driver() : lexer_{this}, parser_{this} {
+  lexer_.set_debug(trace_scanning_);
+  parser_.set_debug_level(trace_parsing_);
+}
+
+int Driver::Parse(const std::string& in_path, const std::string& out_path) {
+  loc_.initialize(&in_path);
+  auto p_ifs = std::make_unique<std::ifstream>(in_path);
+  auto p_ofs = std::make_unique<std::ofstream>(out_path);
+  lexer_.switch_streams(*p_ifs, *p_ofs);
+  int res = parser_();
   return res;
 }
