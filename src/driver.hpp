@@ -22,7 +22,6 @@ class Driver {
   yy::Lexer lexer_;
   yy::Parser parser_;
 
-  std::unique_ptr<Body> p_program_;
   yy::Parser::location_type loc_;
 
   bool trace_parsing_ = LOG_LEVEL <= DEBUG;

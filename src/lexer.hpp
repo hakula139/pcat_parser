@@ -19,7 +19,7 @@ class Lexer : public yyFlexLexer {
  public:
   explicit Lexer(Driver* p_drv) : drv_{*p_drv} {}
 
-  virtual yy::Parser::symbol_type ReadToken();
+  virtual Parser::symbol_type ReadToken();
 
  protected:
   Driver& drv_;

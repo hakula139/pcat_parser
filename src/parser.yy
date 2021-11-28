@@ -15,20 +15,22 @@
 %define parse.error verbose
 %define parse.lac full
 
-%lex-param { yy::Lexer* p_lexer }
-%parse-param { Driver* p_drv }
-
-%code top {
-#include "driver.hpp"
-#include "lexer.hpp"
-}
+%lex-param {yy::Lexer* p_lexer}
+%parse-param {yy::Lexer* p_lexer}
 
 %code requires {
 #include <string>
 
-#include "utils/logger.hpp"
-
 class Driver;
+namespace yy {
+  class Lexer;
+}
+}
+
+%code top {
+#include "driver.hpp"
+#include "lexer.hpp"
+#include "utils/logger.hpp"
 
 static yy::Parser::symbol_type yylex(yy::Lexer* p_lexer) {
   return p_lexer->ReadToken();
