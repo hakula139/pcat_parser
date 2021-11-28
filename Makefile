@@ -10,9 +10,9 @@ LEX_SRC   := $(SRC_DIR)/lexer.cpp
 
 YACC_IN   := $(SRC_DIR)/parser.yy
 YACC_SRC  := $(SRC_DIR)/parser.cpp
-YACC_SRCS := $(SRC_DIR)/location.hpp $(SRC_DIR)/parser.hpp $(SRC_DIR)/parser.cpp
+YACC_SRCS := $(YACC_SRC) $(SRC_DIR)/parser.hpp $(SRC_DIR)/location.hpp 
 
-SRCS      := $(shell find $(SRC_DIR) -name *.cpp) $(YACC_SRC)
+SRCS      := $(YACC_SRC) $(LEX_SRC) $(shell find $(SRC_DIR) -name *.cpp)
 OBJS      := $(SRCS:%=$(BUILD_DIR)/%.o)
 
 LEX       := flex

@@ -13,13 +13,13 @@
 #define PURPLE "\e[0;35m"
 #define RESET "\e[0;0m"
 
-inline void Logger::Log(
+void Logger::Log(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (p_loc) os << *p_loc << ": ";
   os << msg << RESET << "\n";
 }
 
-inline void Logger::Debug(
+void Logger::Debug(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= DEBUG) {
     os << GREEN << "[DEBUG] ";
@@ -27,7 +27,7 @@ inline void Logger::Debug(
   }
 }
 
-inline void Logger::Info(
+void Logger::Info(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= INFO) {
     os << BLUE << "[INFO ] ";
@@ -35,7 +35,7 @@ inline void Logger::Info(
   }
 }
 
-inline void Logger::Warn(
+void Logger::Warn(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= WARN) {
     os << YELLOW << "[WARN ] ";
@@ -43,7 +43,7 @@ inline void Logger::Warn(
   }
 }
 
-inline void Logger::Error(
+void Logger::Error(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= ERROR) {
     os << RED << "[ERROR] ";
@@ -51,7 +51,7 @@ inline void Logger::Error(
   }
 }
 
-inline void Logger::Fatal(
+void Logger::Fatal(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= FATAL) {
     os << PURPLE << "[FATAL] ";
