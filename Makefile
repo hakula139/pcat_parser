@@ -10,15 +10,16 @@ LEX_SRC   := $(SRC_DIR)/lexer.cpp
 
 YACC_IN   := $(SRC_DIR)/parser.yy
 YACC_SRC  := $(SRC_DIR)/parser.cpp
-YACC_SRCS := $(YACC_SRC) $(SRC_DIR)/parser.hpp $(SRC_DIR)/location.hpp 
+YACC_H    := $(SRC_DIR)/parser.hpp $(SRC_DIR)/location.hpp
 
 SRCS      := $(YACC_SRC) $(LEX_SRC) $(shell find $(SRC_DIR) -name *.cpp)
 OBJS      := $(SRCS:%=$(BUILD_DIR)/%.o)
+DEPS      := $(OBJS:.o=.d)
 
 LEX       := flex
 YACC      := bison
 CXX       := g++
-CXXFLAGS  := -g -Wall -O3 -std=c++17
+CXXFLAGS  := -g -Wall -O3 -std=c++17 -MMD
 MKDIR     := mkdir -p
 RM        := rm -rf
 
@@ -46,5 +47,9 @@ $(YACC_SRC): $(YACC_IN)
 	@echo + $@
 	@$(YACC) -o $@ -d $<
 
+$(YACC_H): $(YACC_SRC)
+
+-include $(DEPS)
+
 clean:
-	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRCS)
+	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRC) $(YACC_H)
