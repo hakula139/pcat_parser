@@ -21,8 +21,6 @@ class Lexer : public yyFlexLexer {
 
   virtual yy::Parser::symbol_type ReadToken();
 
-  yy::Parser::symbol_type operator()() { return ReadToken(); }
-
  protected:
   Driver& drv_;
 };

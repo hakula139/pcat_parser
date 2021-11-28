@@ -15,19 +15,25 @@
 %define parse.error verbose
 %define parse.lac full
 
+%lex-param { yy::Lexer* p_lexer }
+%parse-param { Driver* p_drv }
+
 %code top {
-  #include "driver.hpp"
+#include "driver.hpp"
+#include "lexer.hpp"
 }
 
 %code requires {
-  #include <string>
+#include <string>
 
-  #include "utils/logger.hpp"
+#include "utils/logger.hpp"
 
-  class Driver;
+class Driver;
+
+static yy::Parser::symbol_type yylex(yy::Lexer* p_lexer) {
+  return p_lexer->ReadToken();
 }
-
-%param { Driver* p_drv }
+}
 
 %define api.token.prefix {T_}
 %token
@@ -341,5 +347,5 @@ array_expr:
 %%
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) {
-  Logger::Error(msg, loc);
+  Logger::Error(msg, &loc);
 }

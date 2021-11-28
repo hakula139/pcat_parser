@@ -5,15 +5,15 @@
 #include <string>
 #include <unordered_map>
 
+#include "driver.hpp"
 #include "parser.hpp"
 
 #define YY_USER_ACTION loc.step(); loc += YYLeng();
-static auto& loc = drv_.loc();
 
-using yy::Parser::location_type;
-using yy::Parser::symbol_type;
+using location_type = yy::Parser::location_type;
+using symbol_type = yy::Parser::symbol_type;
 using MakeTable =
-    std::unordered_map<std::string, symbol_type (*)(const location_type& loc)>;
+    std::unordered_map<std::string, symbol_type (*)(location_type loc)>;
 
 symbol_type make_INTEGER(const std::string& s, const location_type& loc);
 symbol_type make_REAL(const std::string& s, const location_type& loc);
@@ -53,6 +53,11 @@ COMMENTS_BEGIN        "(*"
 COMMENTS_END          "*)"
 
 %%
+
+%{
+  auto& loc = drv_.loc();
+%}
+
 <INITIAL><<EOF>>              { return yy::Parser::make_YYEOF(loc); }
 <INITIAL>({WS}|{NEWLINE})     /* skip whitespaces */
 
@@ -71,6 +76,7 @@ COMMENTS_END          "*)"
 <COMMENT><<EOF>>              { skip_COMMENTS("", loc); }
 
 <INITIAL>.                    { panic_UNKNOWN_CHAR(YYText(), loc); }
+
 %%
 
 symbol_type make_INTEGER(const std::string& s, const location_type& loc) {
@@ -198,7 +204,7 @@ void skip_COMMENTS(const std::string& s, const location_type& loc) {
   static std::string comments_buf;
   static location_type comments_loc;
 
-  if (s == COMMENTS_BEGIN) {
+  if (s == "(*") {
     comments_buf = s;
     comments_loc = loc;
   } else if (!s.empty()) {
