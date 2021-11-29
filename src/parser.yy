@@ -35,6 +35,13 @@ namespace yy {
 static yy::Parser::symbol_type yylex(yy::Lexer* p_lexer) {
   return p_lexer->ReadToken();
 }
+
+// A workaround to solve the undefined reference issue, as we have defined
+// another yylex() which is not default.
+int yyFlexLexer::yylex() {
+  Logger::Warn("calling wrong yylex()");
+  return EXIT_FAILURE;
+}
 }
 
 %define api.token.prefix {T_}
