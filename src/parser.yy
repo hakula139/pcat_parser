@@ -21,6 +21,8 @@
 %code requires {
 #include <string>
 
+#include "ast/index.hpp"
+
 class Driver;
 namespace yy {
   class Lexer;
