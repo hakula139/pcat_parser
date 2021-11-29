@@ -10,6 +10,9 @@
 #include "../location.hpp"
 #include "node.hpp"
 
+class Stmt;
+class Stmts;
+
 using StmtPtr = std::unique_ptr<Stmt>;
 using StmtsPtr = std::unique_ptr<Stmts>;
 

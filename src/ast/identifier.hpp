@@ -10,6 +10,9 @@
 #include "../location.hpp"
 #include "node.hpp"
 
+class Id;
+class Ids;
+
 using IdPtr = std::unique_ptr<Id>;
 using IdsPtr = std::unique_ptr<Ids>;
 

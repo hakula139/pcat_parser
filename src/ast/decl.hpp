@@ -13,6 +13,17 @@
 #include "param.hpp"
 #include "type.hpp"
 
+class Decl;
+class Decls;
+class VarDecl;
+class VarDecls;
+class TypeDecl;
+class TypeDecls;
+class ProcDecl;
+class ProcDecls;
+
+class Body;
+
 using DeclPtr = std::unique_ptr<Decl>;
 using DeclsPtr = std::unique_ptr<Decls>;
 using VarDeclPtr = std::unique_ptr<VarDecl>;
@@ -21,8 +32,6 @@ using TypeDeclPtr = std::unique_ptr<TypeDecl>;
 using TypeDeclsPtr = std::unique_ptr<TypeDecls>;
 using ProcDeclPtr = std::unique_ptr<ProcDecl>;
 using ProcDeclsPtr = std::unique_ptr<ProcDecls>;
-
-class Body;
 
 class Decl : public Node {
  public:

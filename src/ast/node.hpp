@@ -9,6 +9,9 @@
 
 #include "../location.hpp"
 
+class Node;
+class Nodes;
+
 using NodePtr = std::unique_ptr<Node>;
 using NodesPtr = std::unique_ptr<Nodes>;
 

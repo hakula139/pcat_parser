@@ -12,6 +12,11 @@
 #include "node.hpp"
 #include "type.hpp"
 
+class Param;
+class Params;
+class FormalParam;
+class FormalParams;
+
 using ParamPtr = std::unique_ptr<Param>;
 using ParamsPtr = std::unique_ptr<Params>;
 using FormalParamPtr = std::unique_ptr<FormalParam>;

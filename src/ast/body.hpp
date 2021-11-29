@@ -11,6 +11,8 @@
 #include "node.hpp"
 #include "stmt.hpp"
 
+class Body;
+
 using BodyPtr = std::unique_ptr<Body>;
 
 class Body : public Node {

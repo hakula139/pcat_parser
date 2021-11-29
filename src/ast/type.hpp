@@ -9,6 +9,14 @@
 #include "../location.hpp"
 #include "node.hpp"
 
+class Type;
+class TypeAnnot;
+class Component;
+class Components;
+class IdType;
+class ArrayType;
+class RecordType;
+
 using TypePtr = std::unique_ptr<Type>;
 using TypeAnnotPtr = std::unique_ptr<TypeAnnot>;
 using ComponentPtr = std::unique_ptr<Component>;

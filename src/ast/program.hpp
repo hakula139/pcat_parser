@@ -10,6 +10,8 @@
 #include "body.hpp"
 #include "node.hpp"
 
+class Program;
+
 using ProgramPtr = std::unique_ptr<Program>;
 
 class Program : public Node {
