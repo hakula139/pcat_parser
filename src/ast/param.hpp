@@ -5,12 +5,17 @@
 #include <memory>  // std::unique_ptr
 #include <string>
 #include <utility>  // std::move
+#include <vector>
 
 #include "../location.hpp"
+#include "identifier.hpp"
 #include "node.hpp"
+#include "type.hpp"
 
 using ParamPtr = std::unique_ptr<Param>;
 using ParamsPtr = std::unique_ptr<Params>;
+using FormalParamPtr = std::unique_ptr<FormalParam>;
+using FormalParamsPtr = std::unique_ptr<FormalParams>;
 
 class Param : public Node {
  public:
@@ -25,7 +30,8 @@ class Params : public Nodes {
   explicit Params(const yy::location& loc) : Nodes{loc} {}
 
  protected:
-  const std::string name_ = "parameters";
+  const std::string name_ = "parameter list";
+  std::vector<ParamPtr> data_;
 };
 
 class FormalParam : public Param {
@@ -48,6 +54,7 @@ class FormalParams : public Params {
 
  protected:
   const std::string name_ = "formal parameter list";
+  std::vector<FormalParamPtr> data_;
 };
 
 #endif  // SRC_AST_PARAM_HPP_

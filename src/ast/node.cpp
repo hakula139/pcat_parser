@@ -5,7 +5,7 @@
 
 void Node::Print(std::ostream& os) const {
   PrintIndent(os);
-  os << name_;
+  os << name_ << " ";
   PrintLocation(os);
   os << "\n";
 }

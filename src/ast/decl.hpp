@@ -8,7 +8,10 @@
 #include <vector>
 
 #include "../location.hpp"
+#include "identifier.hpp"
 #include "node.hpp"
+#include "param.hpp"
+#include "type.hpp"
 
 using DeclPtr = std::unique_ptr<Decl>;
 using DeclsPtr = std::unique_ptr<Decls>;
@@ -35,6 +38,7 @@ class Decls : public Nodes {
 
  protected:
   const std::string name_ = "declaration list";
+  std::vector<DeclPtr> data_;
 };
 
 class VarDecl : public Decl {
@@ -65,6 +69,7 @@ class VarDecls : public Decls {
 
  protected:
   const std::string name_ = "variable declaration list";
+  std::vector<VarDeclPtr> data_;
 };
 
 class TypeDecl : public Decl {
@@ -87,6 +92,7 @@ class TypeDecls : public Decls {
 
  protected:
   const std::string name_ = "type declaration list";
+  std::vector<TypeDeclPtr> data_;
 };
 
 class ProcDecl : public Decl {
@@ -120,6 +126,7 @@ class ProcDecls : public Decls {
 
  protected:
   const std::string name_ = "procedure declaration list";
+  std::vector<ProcDeclPtr> data_;
 };
 
 #endif  // SRC_AST_DECL_HPP_
