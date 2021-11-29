@@ -2,6 +2,7 @@
 #define SRC_BASE_CONFIG_HPP_
 
 enum LogLevel {
+  TRACE,
   DEBUG,
   INFO,
   WARN,

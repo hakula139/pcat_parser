@@ -8,6 +8,11 @@
 
 class Logger {
  public:
+  static void Trace(
+      const std::string& msg,
+      const yy::location* p_loc = nullptr,
+      std::ostream& os = std::cout);
+
   static void Debug(
       const std::string& msg,
       const yy::location* p_loc = nullptr,

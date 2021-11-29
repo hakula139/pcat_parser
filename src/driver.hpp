@@ -24,8 +24,8 @@ class Driver {
 
   yy::Parser::location_type loc_;
 
-  bool trace_parsing_ = LOG_LEVEL <= DEBUG;
-  bool trace_scanning_ = LOG_LEVEL <= DEBUG;
+  bool trace_parsing_ = LOG_LEVEL <= TRACE;
+  bool trace_scanning_ = LOG_LEVEL <= TRACE;
 };
 
 #endif  // SRC_DRIVER_HPP_
