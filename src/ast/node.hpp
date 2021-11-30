@@ -28,10 +28,24 @@ class Node {
  protected:
   void PrintIndent(std::ostream& os) const;
   void PrintLocation(std::ostream& os) const;
+  void PrintBase(std::ostream& os) const;
 
   const std::string name_ = "node";
   yy::location loc_;
   int depth_ = 0;
+};
+
+class Terminal : public Node {
+ public:
+  explicit Terminal(const yy::location& loc, const std::string& value)
+      : Node{loc}, value_{value} {}
+
+  void Print(std::ostream& os) const override;
+  virtual std::string value() const { return value_; }
+
+ protected:
+  const std::string name_ = "terminal";
+  const std::string value_;
 };
 
 class Nodes : public Node {

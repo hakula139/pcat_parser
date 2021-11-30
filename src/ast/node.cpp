@@ -6,9 +6,7 @@
 void Node::UpdateDepth(int depth) { set_depth(depth); }
 
 void Node::Print(std::ostream& os) const {
-  PrintIndent(os);
-  os << name_ << " ";
-  PrintLocation(os);
+  PrintBase(os);
   os << "\n";
 }
 
@@ -17,6 +15,17 @@ void Node::PrintIndent(std::ostream& os) const {
 }
 
 void Node::PrintLocation(std::ostream& os) const { os << loc_; }
+
+void Node::PrintBase(std::ostream& os) const {
+  PrintIndent(os);
+  os << name_ << " ";
+  PrintLocation(os);
+}
+
+void Terminal::Print(std::ostream& os) const {
+  PrintBase(os);
+  os << " " << value_ << "\n";
+}
 
 void Nodes::UpdateDepth(int depth) {
   Node::UpdateDepth(depth);

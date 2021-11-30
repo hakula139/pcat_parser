@@ -16,18 +16,13 @@ class Ids;
 using IdPtr = std::unique_ptr<Id>;
 using IdsPtr = std::unique_ptr<Ids>;
 
-class Id : public Node {
+class Id : public Terminal {
  public:
   explicit Id(const yy::location& loc, const std::string& value)
-      : Node{loc}, value_{value} {}
-
-  void UpdateDepth(int depth) override;
-  void Print(std::ostream& os) const override;
-  virtual std::string value() const { return value_; }
+      : Terminal{loc, value} {}
 
  protected:
   const std::string name_ = "identifier";
-  const std::string value_;
 };
 
 class Ids : public Nodes {

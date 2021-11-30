@@ -20,7 +20,9 @@ class UnaryExpr;
 class BinaryExpr;
 class ProcCallExpr;
 class RecordConstrExpr;
+class CompValues;
 class ArrayConstrExpr;
+class ArrayValues;
 class WriteExpr;
 class WriteExprs;
 class AssignExpr;
@@ -35,7 +37,9 @@ using UnaryExprPtr = std::unique_ptr<UnaryExpr>;
 using BinaryExprPtr = std::unique_ptr<BinaryExpr>;
 using ProcCallExprPtr = std::unique_ptr<ProcCallExpr>;
 using RecordConstrExprPtr = std::unique_ptr<RecordConstrExpr>;
+using CompValuesPtr = std::unique_ptr<CompValues>;
 using ArrayConstrExprPtr = std::unique_ptr<ArrayConstrExpr>;
+using ArrayValuesPtr = std::unique_ptr<ArrayValues>;
 using WriteExprPtr = std::unique_ptr<WriteExpr>;
 using WriteExprsPtr = std::unique_ptr<WriteExprs>;
 using AssignExprPtr = std::unique_ptr<AssignExpr>;
@@ -144,6 +148,14 @@ class RecordConstrExpr : public Expr {
   CompValuesPtr p_comp_values_;
 };
 
+class CompValues : public AssignExprs {
+ public:
+  explicit CompValues(const yy::location& loc) : AssignExprs{loc} {}
+
+ protected:
+  const std::string name_ = "component values";
+};
+
 class ArrayConstrExpr : public Expr {
  public:
   explicit ArrayConstrExpr(
@@ -159,6 +171,14 @@ class ArrayConstrExpr : public Expr {
   const std::string name_ = "array construction expression";
   IdPtr p_id_;
   ArrayValuesPtr p_array_values_;
+};
+
+class ArrayValues : public ArrayExprs {
+ public:
+  explicit ArrayValues(const yy::location& loc) : ArrayExprs{loc} {}
+
+ protected:
+  const std::string name_ = "array values";
 };
 
 class WriteExpr : public Expr {

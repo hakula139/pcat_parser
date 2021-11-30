@@ -8,9 +8,6 @@ void Program::UpdateDepth(int depth) {
 }
 
 void Program::Print(std::ostream& os) const {
-  PrintIndent(os);
-  os << name_ << " ";
-  PrintLocation(os);
-  os << "\n";
+  Node::Print(os);
   if (p_body_) p_body_->Print(os);
 }

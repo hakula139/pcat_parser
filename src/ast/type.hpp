@@ -7,6 +7,7 @@
 #include <utility>  // std::move
 
 #include "../location.hpp"
+#include "identifier.hpp"
 #include "node.hpp"
 
 class Type;

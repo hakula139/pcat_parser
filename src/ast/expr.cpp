@@ -6,9 +6,7 @@
 #include "../base/common.hpp"
 
 void Expr::Print(std::ostream& os) const {
-  PrintIndent(os);
-  os << name_ << " ";
-  PrintLocation(os);
+  PrintBase(os);
   os << " " << value() << "\n";
 }
 
