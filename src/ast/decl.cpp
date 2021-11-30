@@ -2,11 +2,13 @@
 
 #include <iostream>
 
+#include "body.hpp"
+
 void VarDecl::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_ids_->set_depth(depth + 1);
-  p_type_annot_->set_depth(depth + 1);
-  p_expr_->set_depth(depth + 1);
+  Decl::UpdateDepth(depth);
+  p_ids_->UpdateDepth(depth + 1);
+  p_type_annot_->UpdateDepth(depth + 1);
+  p_expr_->UpdateDepth(depth + 1);
 }
 
 void VarDecl::Print(std::ostream& os) const {
@@ -17,9 +19,9 @@ void VarDecl::Print(std::ostream& os) const {
 }
 
 void TypeDecl::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_id_->set_depth(depth + 1);
-  p_type_->set_depth(depth + 1);
+  Decl::UpdateDepth(depth);
+  p_id_->UpdateDepth(depth + 1);
+  p_type_->UpdateDepth(depth + 1);
 }
 
 void TypeDecl::Print(std::ostream& os) const {
@@ -29,11 +31,11 @@ void TypeDecl::Print(std::ostream& os) const {
 }
 
 void ProcDecl::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_id_->set_depth(depth + 1);
-  p_formal_params_->set_depth(depth + 1);
-  p_type_annot_->set_depth(depth + 1);
-  p_body_->set_depth(depth + 1);
+  Decl::UpdateDepth(depth);
+  p_id_->UpdateDepth(depth + 1);
+  p_formal_params_->UpdateDepth(depth + 1);
+  p_type_annot_->UpdateDepth(depth + 1);
+  p_body_->UpdateDepth(depth + 1);
 }
 
 void ProcDecl::Print(std::ostream& os) const {

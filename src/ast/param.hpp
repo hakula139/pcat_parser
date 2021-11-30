@@ -16,11 +16,17 @@ class Param;
 class Params;
 class FormalParam;
 class FormalParams;
+class ActualParams;
+class ReadParams;
+class WriteParams;
 
 using ParamPtr = std::unique_ptr<Param>;
 using ParamsPtr = std::unique_ptr<Params>;
 using FormalParamPtr = std::unique_ptr<FormalParam>;
 using FormalParamsPtr = std::unique_ptr<FormalParams>;
+using ActualParamsPtr = std::unique_ptr<ActualParams>;
+using ReadParamsPtr = std::unique_ptr<ReadParams>;
+using WriteParamsPtr = std::unique_ptr<WriteParams>;
 
 class Param : public Node {
  public:
@@ -60,6 +66,30 @@ class FormalParams : public Params {
  protected:
   const std::string name_ = "formal parameter list";
   std::vector<FormalParamPtr> data_;
+};
+
+class ActualParams : public Exprs {
+ public:
+  explicit ActualParams(const yy::location& loc) : Exprs{loc} {}
+
+ protected:
+  const std::string name_ = "actual parameter list";
+};
+
+class ReadParams : public Lvalues {
+ public:
+  explicit ReadParams(const yy::location& loc) : Lvalues{loc} {}
+
+ protected:
+  const std::string name_ = "read parameter list";
+};
+
+class WriteParams : public WriteExprs {
+ public:
+  explicit WriteParams(const yy::location& loc) : WriteExprs{loc} {}
+
+ protected:
+  const std::string name_ = "write parameter list";
 };
 
 #endif  // SRC_AST_PARAM_HPP_

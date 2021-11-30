@@ -3,8 +3,8 @@
 #include <iostream>
 
 void Program::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_body_->set_depth(depth + 1);
+  Node::UpdateDepth(depth);
+  p_body_->UpdateDepth(depth + 1);
 }
 
 void Program::Print(std::ostream& os) const {

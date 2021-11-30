@@ -19,7 +19,7 @@ class Node {
  public:
   explicit Node(const yy::location& loc) : loc_{loc} {}
 
-  virtual void UpdateDepth(int depth) = 0;
+  virtual void UpdateDepth(int depth);
   virtual void Print(std::ostream& os) const;
 
   void set_loc(const yy::location& loc) { loc_ = loc; }

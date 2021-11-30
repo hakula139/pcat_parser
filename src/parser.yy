@@ -251,16 +251,6 @@ write_params:
 | write_exprs { Logger::Debug("write-params"); }
 ;
 
-write_exprs:
-  write_expr {}
-| write_exprs COMMA write_expr {}
-;
-
-write_expr:
-  STRING {}
-| expr {}
-;
-
 elif_sections:
   %empty {}
 | elif_sections elif_section {}
@@ -313,6 +303,35 @@ expr:
 | ID LSABRAC array_values RSABRAC { Logger::Debug("array-construct-expr"); }
 ;
 
+write_exprs:
+  write_expr {}
+| write_exprs COMMA write_expr {}
+;
+
+write_expr:
+  STRING {}
+| expr {}
+;
+
+assign_exprs:
+  assign_expr {}
+| assign_exprs SEMICOLON assign_expr {}
+;
+
+assign_expr:
+  ID ASSIGN expr {}
+;
+
+array_exprs:
+  array_expr {}
+| array_exprs COMMA array_expr {}
+;
+
+array_expr:
+  expr {}
+| expr[n] OF expr[v] {}
+;
+
 number:
   INTEGER {}
 | REAL {}
@@ -333,27 +352,8 @@ comp_values:
   assign_exprs { Logger::Debug("comp-values"); }
 ;
 
-assign_exprs:
-  assign_expr {}
-| assign_exprs SEMICOLON assign_expr {}
-;
-
-assign_expr:
-  ID ASSIGN expr {}
-;
-
 array_values:
   array_exprs { Logger::Debug("array-values"); }
-;
-
-array_exprs:
-  array_expr {}
-| array_exprs COMMA array_expr {}
-;
-
-array_expr:
-  expr {}
-| expr[n] OF expr[v] {}
 ;
 %%
 

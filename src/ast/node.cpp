@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+void Node::UpdateDepth(int depth) { set_depth(depth); }
+
 void Node::Print(std::ostream& os) const {
   PrintIndent(os);
   os << name_ << " ";
@@ -17,9 +19,9 @@ void Node::PrintIndent(std::ostream& os) const {
 void Node::PrintLocation(std::ostream& os) const { os << loc_; }
 
 void Nodes::UpdateDepth(int depth) {
-  set_depth(depth);
+  Node::UpdateDepth(depth);
   for (auto&& p_node : data_) {
-    p_node->set_depth(depth + 1);
+    p_node->UpdateDepth(depth + 1);
   }
 }
 

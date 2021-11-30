@@ -3,9 +3,9 @@
 #include <iostream>
 
 void FormalParam::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_ids_->set_depth(depth + 1);
-  p_type_->set_depth(depth + 1);
+  Param::UpdateDepth(depth);
+  p_ids_->UpdateDepth(depth + 1);
+  p_type_->UpdateDepth(depth + 1);
 }
 
 void FormalParam::Print(std::ostream& os) const {

@@ -3,8 +3,8 @@
 #include <iostream>
 
 void TypeAnnot::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_type_->set_depth(depth + 1);
+  Node::UpdateDepth(depth);
+  p_type_->UpdateDepth(depth + 1);
 }
 
 void TypeAnnot::Print(std::ostream& os) const {
@@ -13,9 +13,9 @@ void TypeAnnot::Print(std::ostream& os) const {
 }
 
 void Component::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_id_->set_depth(depth + 1);
-  p_type_->set_depth(depth + 1);
+  Node::UpdateDepth(depth);
+  p_id_->UpdateDepth(depth + 1);
+  p_type_->UpdateDepth(depth + 1);
 }
 
 void Component::Print(std::ostream& os) const {
@@ -25,8 +25,8 @@ void Component::Print(std::ostream& os) const {
 }
 
 void IdType::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_id_->set_depth(depth + 1);
+  Type::UpdateDepth(depth);
+  p_id_->UpdateDepth(depth + 1);
 }
 
 void IdType::Print(std::ostream& os) const {
@@ -35,8 +35,8 @@ void IdType::Print(std::ostream& os) const {
 }
 
 void ArrayType::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_type_->set_depth(depth + 1);
+  Type::UpdateDepth(depth);
+  p_type_->UpdateDepth(depth + 1);
 }
 
 void ArrayType::Print(std::ostream& os) const {
@@ -45,8 +45,8 @@ void ArrayType::Print(std::ostream& os) const {
 }
 
 void RecordType::UpdateDepth(int depth) {
-  set_depth(depth);
-  p_components_->set_depth(depth + 1);
+  Type::UpdateDepth(depth);
+  p_components_->UpdateDepth(depth + 1);
 }
 
 void RecordType::Print(std::ostream& os) const {

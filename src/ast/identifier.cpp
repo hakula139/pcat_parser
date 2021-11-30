@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void Id::UpdateDepth(int depth) { set_depth(depth); }
+void Id::UpdateDepth(int depth) { Node::UpdateDepth(depth); }
 
 void Id::Print(std::ostream& os) const {
   PrintIndent(os);
