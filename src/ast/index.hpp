@@ -3,6 +3,7 @@
 
 #include "body.hpp"
 #include "decl.hpp"
+#include "expr.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
 #include "param.hpp"

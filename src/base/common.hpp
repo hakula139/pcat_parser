@@ -18,4 +18,13 @@ enum LogLevel {
   FATAL,
 };
 
+// Code snippets for visiting std::variant.
+// See: https://en.cppreference.com/w/cpp/utility/variant/visit
+template <class... Ts>
+struct Overloaded : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+
 #endif  // SRC_BASE_COMMON_HPP_

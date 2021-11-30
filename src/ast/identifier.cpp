@@ -6,6 +6,7 @@ void Id::UpdateDepth(int depth) { Node::UpdateDepth(depth); }
 
 void Id::Print(std::ostream& os) const {
   PrintIndent(os);
-  os << name_ << " " << value_ << " ";
+  os << name_ << " ";
   PrintLocation(os);
+  os << " " << value_ << "\n";
 }

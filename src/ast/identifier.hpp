@@ -23,6 +23,7 @@ class Id : public Node {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+  virtual std::string value() const { return value_; }
 
  protected:
   const std::string name_ = "identifier";
