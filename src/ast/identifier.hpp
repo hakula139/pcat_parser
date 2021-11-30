@@ -16,7 +16,7 @@ class Ids;
 using IdPtr = std::unique_ptr<Id>;
 using IdsPtr = std::unique_ptr<Ids>;
 
-class Id : public Terminal {
+class Id : public Terminal<std::string> {
  public:
   explicit Id(const yy::location& loc, const std::string& value)
       : Terminal{loc, value} {}

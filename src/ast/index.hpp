@@ -2,6 +2,7 @@
 #define SRC_AST_INDEX_HPP_
 
 #include "body.hpp"
+#include "constant.hpp"
 #include "decl.hpp"
 #include "expr.hpp"
 #include "identifier.hpp"

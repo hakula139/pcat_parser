@@ -13,7 +13,7 @@ class Op;
 
 using OpPtr = std::unique_ptr<Op>;
 
-class Op : public Terminal {
+class Op : public Terminal<std::string> {
  public:
   explicit Op(const yy::location& loc, const std::string& value)
       : Terminal{loc, value} {}

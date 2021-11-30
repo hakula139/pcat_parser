@@ -8,7 +8,9 @@
 #include <vector>
 
 #include "../location.hpp"
+#include "expr.hpp"
 #include "identifier.hpp"
+#include "lvalue.hpp"
 #include "node.hpp"
 #include "param.hpp"
 

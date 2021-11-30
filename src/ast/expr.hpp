@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../location.hpp"
+#include "constant.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
 #include "operator.hpp"
