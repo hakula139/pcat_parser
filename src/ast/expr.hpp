@@ -11,6 +11,7 @@
 #include "../location.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
+#include "operator.hpp"
 #include "param.hpp"
 
 class Expr;
