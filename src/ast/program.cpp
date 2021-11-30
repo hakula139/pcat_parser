@@ -4,7 +4,7 @@
 
 void Program::UpdateDepth(int depth) {
   Node::UpdateDepth(depth);
-  p_body_->UpdateDepth(depth + 1);
+  if (p_body_) p_body_->UpdateDepth(depth + 1);
 }
 
 void Program::Print(std::ostream& os) const {
@@ -12,5 +12,5 @@ void Program::Print(std::ostream& os) const {
   os << name_ << " ";
   PrintLocation(os);
   os << "\n";
-  p_body_->Print(os);
+  if (p_body_) p_body_->Print(os);
 }

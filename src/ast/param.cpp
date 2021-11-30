@@ -4,12 +4,12 @@
 
 void FormalParam::UpdateDepth(int depth) {
   Param::UpdateDepth(depth);
-  p_ids_->UpdateDepth(depth + 1);
-  p_type_->UpdateDepth(depth + 1);
+  if (p_ids_) p_ids_->UpdateDepth(depth + 1);
+  if (p_type_) p_type_->UpdateDepth(depth + 1);
 }
 
 void FormalParam::Print(std::ostream& os) const {
   Param::Print(os);
-  p_ids_->Print(os);
-  p_type_->Print(os);
+  if (p_ids_) p_ids_->Print(os);
+  if (p_type_) p_type_->Print(os);
 }

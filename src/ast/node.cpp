@@ -21,13 +21,13 @@ void Node::PrintLocation(std::ostream& os) const { os << loc_; }
 void Nodes::UpdateDepth(int depth) {
   Node::UpdateDepth(depth);
   for (auto&& p_node : data_) {
-    p_node->UpdateDepth(depth + 1);
+    if (p_node) p_node->UpdateDepth(depth + 1);
   }
 }
 
 void Nodes::Print(std::ostream& os) const {
   Node::Print(os);
   for (const auto& p_node : data_) {
-    p_node->Print(os);
+    if (p_node) p_node->Print(os);
   }
 }
