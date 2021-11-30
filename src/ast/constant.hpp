@@ -9,15 +9,17 @@
 #include "../location.hpp"
 #include "node.hpp"
 
+template <class T>
 class Number;
 class Integer;
 class Real;
 class String;
 
-using NumberPtr = std::unique_ptr<NumberPtr>;
-using IntegerPtr = std::unique_ptr<IntegerPtr>;
-using RealPtr = std::unique_ptr<RealPtr>;
-using StringPtr = std::unique_ptr<StringPtr>;
+template <class T>
+using NumberPtr = std::unique_ptr<Number<T>>;
+using IntegerPtr = std::unique_ptr<Integer>;
+using RealPtr = std::unique_ptr<Real>;
+using StringPtr = std::unique_ptr<String>;
 
 template <class T>
 class Number : public Terminal<T> {
@@ -31,7 +33,7 @@ class Number : public Terminal<T> {
 class Integer : public Number<int32_t> {
  public:
   explicit Integer(const yy::location& loc, int32_t value)
-      : Terminal{loc, value} {}
+      : Number{loc, value} {}
 
  protected:
   const std::string name_ = "integer";
@@ -39,7 +41,7 @@ class Integer : public Number<int32_t> {
 
 class Real : public Number<double> {
  public:
-  explicit Real(const yy::location& loc, double value) : Terminal{loc, value} {}
+  explicit Real(const yy::location& loc, double value) : Number{loc, value} {}
 
  protected:
   const std::string name_ = "real";

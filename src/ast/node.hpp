@@ -10,9 +10,13 @@
 #include "../location.hpp"
 
 class Node;
+template <class T>
+class Terminal;
 class Nodes;
 
 using NodePtr = std::unique_ptr<Node>;
+template <class T>
+using TerminalPtr = std::unique_ptr<Terminal<T>>;
 using NodesPtr = std::unique_ptr<Nodes>;
 
 class Node {
