@@ -17,7 +17,10 @@ void ParenExpr::UpdateDepth(int depth) {
   if (p_expr_) p_expr_->UpdateDepth(depth + 1);
 }
 
-std::string ParenExpr::value() const { return "(" + p_expr_->value() + ")"; }
+std::string ParenExpr::value() const {
+  auto expr = p_expr_ ? p_expr_->value() : "";
+  return "(" + expr + ")";
+}
 
 void UnaryExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
@@ -26,7 +29,9 @@ void UnaryExpr::UpdateDepth(int depth) {
 }
 
 std::string UnaryExpr::value() const {
-  return p_op_->value() + p_expr_->value();
+  auto op = p_op_ ? p_op_->value() : "";
+  auto expr = p_expr_ ? p_expr_->value() : "";
+  return op + expr;
 }
 
 void BinaryExpr::UpdateDepth(int depth) {
@@ -37,7 +42,10 @@ void BinaryExpr::UpdateDepth(int depth) {
 }
 
 std::string BinaryExpr::value() const {
-  return p_expr1_->value() + p_op_->value() + p_expr2_->value();
+  auto expr1 = p_expr1_ ? p_expr1_->value() : "";
+  auto op = p_op_ ? p_op_->value() : "";
+  auto expr2 = p_expr2_ ? p_expr1_->value() : "";
+  return expr1 + " " + op + " " + expr2;
 }
 
 void ProcCallExpr::UpdateDepth(int depth) {
@@ -46,7 +54,10 @@ void ProcCallExpr::UpdateDepth(int depth) {
   if (p_actual_params_) p_actual_params_->UpdateDepth(depth + 1);
 }
 
-std::string ProcCallExpr::value() const { return p_id_->value() + "()"; }
+std::string ProcCallExpr::value() const {
+  auto id = p_id_ ? p_id_->value() : "";
+  return id + "()";
+}
 
 void RecordConstrExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
@@ -54,7 +65,10 @@ void RecordConstrExpr::UpdateDepth(int depth) {
   if (p_comp_values_) p_comp_values_->UpdateDepth(depth + 1);
 }
 
-std::string RecordConstrExpr::value() const { return p_id_->value() + "{}"; }
+std::string RecordConstrExpr::value() const {
+  auto id = p_id_ ? p_id_->value() : "";
+  return id + "{}";
+}
 
 void ArrayConstrExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
@@ -62,7 +76,10 @@ void ArrayConstrExpr::UpdateDepth(int depth) {
   if (p_array_values_) p_array_values_->UpdateDepth(depth + 1);
 }
 
-std::string ArrayConstrExpr::value() const { return p_id_->value() + "[<>]"; }
+std::string ArrayConstrExpr::value() const {
+  auto id = p_id_ ? p_id_->value() : "";
+  return id + "[<>]";
+}
 
 void WriteExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
@@ -75,11 +92,13 @@ void WriteExpr::UpdateDepth(int depth) {
 }
 
 std::string WriteExpr::value() const {
-  return std::visit(
-      Overloaded{
-          [](const auto& p) { return p->value(); },
+  auto visitor = Overloaded{
+      [](const auto& p) {
+        auto value = p ? p->value() : "";
+        return value;
       },
-      p_write_expr_);
+  };
+  return std::visit(visitor, p_write_expr_);
 }
 
 void AssignExpr::UpdateDepth(int depth) {
@@ -89,7 +108,9 @@ void AssignExpr::UpdateDepth(int depth) {
 }
 
 std::string AssignExpr::value() const {
-  return p_id_->value() + " = " + p_expr_->value();
+  auto id = p_id_ ? p_id_->value() : "";
+  auto expr = p_expr_ ? p_expr_->value() : "";
+  return id + " = " + expr;
 }
 
 void ArrayExpr::UpdateDepth(int depth) {
@@ -98,6 +119,8 @@ void ArrayExpr::UpdateDepth(int depth) {
   if (p_num_) p_num_->UpdateDepth(depth + 1);
 }
 
-std::string AssignExpr::value() const {
-  return p_id_->value() + " = " + p_expr_->value();
+std::string ArrayExpr::value() const {
+  auto value = p_value_ ? p_value_->value() : "";
+  auto num = p_num_ ? p_num_->value() + " OF " : "";
+  return num + value;
 }
