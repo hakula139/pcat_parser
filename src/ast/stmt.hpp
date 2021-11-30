@@ -54,9 +54,9 @@ class Stmt : public Node {
   const std::string name_ = "statement";
 };
 
-class Stmts : public Node {
+class Stmts : public Nodes {
  public:
-  explicit Stmts(const yy::location& loc) : Node{loc} {}
+  explicit Stmts(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "statement list";
