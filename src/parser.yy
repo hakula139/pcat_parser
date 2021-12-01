@@ -38,6 +38,12 @@ namespace yy {
 #include "lexer.hpp"
 #include "utils/logger.hpp"
 
+// Some abbreviations.
+#define MOVE()
+#define MOVE(x) std::move(x)
+#define MOVE(x, ...) std::move(x), MOVE(__VA_ARGS__)
+#define MAKE_TOKEN(T, loc, ...) std::make_unique<T>(loc, MOVE(__VA_ARGS__))
+
 static yy::Parser::symbol_type yylex(yy::Lexer* p_lexer) {
   return p_lexer->ReadToken();
 }
@@ -186,228 +192,254 @@ int yyFlexLexer::yylex() {
 
 program:
   PROGRAM IS body SEMICOLON {
-    $$ = std::make_unique<Program>(@$, std::move($body));
-    p_driver->set_program(std::move($$));
+    $$ = MAKE_TOKEN(Program, @$, $body);
+    p_driver->set_program(MOVE($$));
   }
 ;
 
 body:
-  decls BEGIN stmts END { Logger::Debug("body"); }
+  decls BEGIN stmts END { $$ = MAKE_TOKEN(Body, @$, $decls, $stmts); }
 ;
 
 // Declarations
 
 decls:
-  %empty {}
-| decls decl {}
+  %empty { $$ = MAKE_TOKEN(Decls, @$); }
+| decls decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 decl:
-  VAR var_decls {}
-| PROCEDURE proc_decls {}
-| TYPE type_decls {}
+  VAR var_decls { $$ = MOVE($2); $$->set_loc(@$); }
+| PROCEDURE proc_decls { $$ = MOVE($2); $$->set_loc(@$); }
+| TYPE type_decls { $$ = MOVE($2); $$->set_loc(@$); }
 ;
 
 var_decls:
-  %empty {}
-| var_decls var_decl {}
+  var_decl { $$ = MAKE_TOKEN(VarDecls, @$); $$->Insert(MOVE($1)); }
+| var_decls var_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 var_decl:
-  ids type_annot ASSIGN expr SEMICOLON { Logger::Debug("var-decl"); }
+  ids type_annot ASSIGN expr SEMICOLON {
+    $$ = MAKE_TOKEN(VarDecl, @$, $ids, $type_annot, $expr);
+  }
 ;
 
 type_decls:
-  %empty {}
-| type_decls type_decl {}
+  type_decl { $$ = MAKE_TOKEN(TypeDecls, @$); $$->Insert(MOVE($1)); }
+| type_decls type_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 type_decl:
-  ID IS type SEMICOLON { Logger::Debug("type-decl"); }
+  ID IS type SEMICOLON { $$ = MAKE_TOKEN(TypeDecl, @$, $ID, $type); }
 ;
 
 proc_decls:
-  %empty {}
-| proc_decls proc_decl {}
+  proc_decl { $$ = MAKE_TOKEN(ProcDecls, @$); $$->Insert(MOVE($1)); }
+| proc_decls proc_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 proc_decl:
-  ID LPAREN formal_params RPAREN type_annot IS body SEMICOLON { Logger::Debug("proc-decl"); }
+  ID LPAREN formal_params RPAREN type_annot IS body SEMICOLON {
+    $$ = MAKE_TOKEN(ProcDecl, @$, $ID, $formal_params, $type_annot, $body);
+  }
 ;
 
 formal_params:
-  %empty {}
-| formal_param {}
-| formal_params SEMICOLON formal_param {}
+  %empty { $$ = MAKE_TOKEN(FormalParams, @$); }
+| formal_param { $$ = MAKE_TOKEN(FormalParams, @$); $$->Insert(MOVE($1)); }
+| formal_params SEMICOLON formal_param { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 formal_param:
-  ids COLON type { Logger::Debug("formal-param"); }
+  ids COLON type { $$ = MAKE_TOKEN(FormalParam, @$, $ids, $type); }
 ;
 
 type_annot:
-  %empty {}
-| COLON type { Logger::Debug("type-annot"); }
+  %empty { $$ = nullptr; }
+| COLON type { $$ = MAKE_TOKEN(TypeAnnot, @$, $type); }
 ;
 
 type:
-  ID { Logger::Debug("id-type"); }
-| ARRAY OF type[el_type] { Logger::Debug("array-type"); }
-| RECORD components END { Logger::Debug("record-type"); }
+  ID { $$ = MAKE_TOKEN(IdType, @$, $ID); }
+| ARRAY OF type[el_type] { $$ = MAKE_TOKEN(ArrayType, @$, $el_type); }
+| RECORD components END { $$ = MAKE_TOKEN(RecordType, @$, $components); }
 ;
 
 components:
-  component {}
-| components component {}
+  component { $$ = MAKE_TOKEN(Components, @$); $$->Insert(MOVE($1)); }
+| components component { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 component:
-  ID COLON type SEMICOLON { Logger::Debug("component"); }
+  ID COLON type SEMICOLON { $$ = MAKE_TOKEN(Component, @$, $ID, $type); }
 ;
 
 ids:
-  ID {}
-| ids COMMA ID {}
+  ID { $$ = MAKE_TOKEN(Ids, @$); $$->Insert(MOVE($1)); }
+| ids COMMA ID { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 // Statements
 
 stmts:
-  %empty {}
-| stmts stmt {}
+  %empty { $$ = MAKE_TOKEN(Stmts, @$); }
+| stmts stmt { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 stmt:
-  lvalue ASSIGN expr SEMICOLON { Logger::Debug("assign-stmt"); }
-| ID LPAREN actual_params RPAREN SEMICOLON { Logger::Debug("proc-call-stmt"); }
-| READ LPAREN read_params RPAREN SEMICOLON { Logger::Debug("read-stmt"); }
-| WRITE LPAREN write_params RPAREN SEMICOLON { Logger::Debug("write-stmt"); }
-| IF expr THEN stmts elif_sections else_section END SEMICOLON { Logger::Debug("if-stmt"); }
-| WHILE expr DO stmts END SEMICOLON { Logger::Debug("while-stmt"); }
-| LOOP stmts END SEMICOLON { Logger::Debug("loop-stmt"); }
-| FOR ID ASSIGN expr[begin] TO expr[end] for_step DO stmts END SEMICOLON { Logger::Debug("for-stmt"); }
-| EXIT SEMICOLON { Logger::Debug("exit-stmt"); }
-| RETURN SEMICOLON { Logger::Debug("return-stmt"); }
-| RETURN expr SEMICOLON { Logger::Debug("return-stmt"); }
+  lvalue ASSIGN expr SEMICOLON {
+    $$ = MAKE_TOKEN(AssignStmt, @$, $lvalue, $expr);
+  }
+| ID LPAREN actual_params RPAREN SEMICOLON {
+    $$ = MAKE_TOKEN(ProcCallStmt, @$, $ID, $actual_params);
+  }
+| READ LPAREN read_params RPAREN SEMICOLON {
+    $$ = MAKE_TOKEN(ReadStmt, @$, $read_params);
+  }
+| WRITE LPAREN write_params RPAREN SEMICOLON {
+    $$ = MAKE_TOKEN(WriteStmt, @$, $write_params);
+  }
+| IF expr THEN stmts elif_sections else_section END SEMICOLON {
+    $$ = MAKE_TOKEN(IfStmt, @$, $expr, $stmts, $elif_sections, $else_section);
+  }
+| WHILE expr DO stmts END SEMICOLON {
+    $$ = MAKE_TOKEN(WhileStmt, @$, $expr, $stmts);
+  }
+| LOOP stmts END SEMICOLON {
+    $$ = MAKE_TOKEN(LoopStmt, @$, $stmts);
+  }
+| FOR ID ASSIGN expr[begin] TO expr[end] for_step DO stmts END SEMICOLON {
+    $$ = MAKE_TOKEN(ForStmt, @$, $ID, $begin, $end, $for_step, $stmts);
+  }
+| EXIT SEMICOLON {
+    $$ = MAKE_TOKEN(ExitStmt, @$);
+  }
+| RETURN SEMICOLON {
+    $$ = MAKE_TOKEN(ReturnStmt, @$);
+  }
+| RETURN expr SEMICOLON {
+    $$ = MAKE_TOKEN(ReturnStmt, @$, $expr);
+  }
 ;
 
 actual_params:
-  %empty {}
-| exprs { Logger::Debug("actual-params"); }
+  %empty { $$ = MAKE_TOKEN(ActualParams, @$); }
+| exprs { $$ = MAKE_TOKEN(ActualParams, @$); $$->Insert(MOVE($1)); }
 ;
 
 read_params:
-  lvalues { Logger::Debug("read-params"); }
+  lvalues { $$ = MAKE_TOKEN(ReadParams, @$); $$->Insert(MOVE($1)); }
 ;
 
 write_params:
-  %empty {}
-| write_exprs { Logger::Debug("write-params"); }
+  %empty { $$ = MAKE_TOKEN(WriteParams, @$); }
+| write_exprs { $$ = MAKE_TOKEN(WriteParams, @$); $$->Insert(MOVE($1)); }
 ;
 
 elif_sections:
-  %empty {}
-| elif_sections elif_section {}
+  %empty { $$ = MAKE_TOKEN(ElifSections, @$); }
+| elif_sections elif_section { $$ = MOVE($1); $$->Insert(MOVE($2)); }
 ;
 
 elif_section:
-  ELSIF expr THEN stmts { Logger::Debug("elif-section"); }
+  ELSIF expr THEN stmts { $$ = MAKE_TOKEN(ElifSection, @$, $expr, $stmts); }
 ;
 
 else_section:
-  %empty {}
-| ELSE stmts { Logger::Debug("else-section"); }
+  %empty { $$ = nullptr; }
+| ELSE stmts { $$ = MAKE_TOKEN(ElseSection, @$, $stmts); }
 ;
 
 for_step:
-  %empty {}
-| BY expr { Logger::Debug("for-step"); }
+  %empty { $$ = nullptr; }
+| BY expr { $$ = MAKE_TOKEN(ForStep, @$, $expr); }
 ;
 
 // Expressions
 
 exprs:
-  expr {}
-| exprs COMMA expr {}
+  expr { $$ = MAKE_TOKEN(Exprs, @$); $$->Insert(MOVE($1)); }
+| exprs COMMA expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 expr:
-  number { Logger::Debug("number-expr"); }
-| lvalue { Logger::Debug("lvalue-expr"); }
-| LPAREN expr RPAREN { Logger::Debug("paren-expr"); }
-| PLUS expr %prec POS { Logger::Debug("unary-expr"); }
-| MINUS expr %prec NEG { Logger::Debug("unary-expr"); }
-| NOT expr { Logger::Debug("unary-expr"); }
-| expr PLUS expr { Logger::Debug("binary-expr"); }
-| expr MINUS expr { Logger::Debug("binary-expr"); }
-| expr STAR expr { Logger::Debug("binary-expr"); }
-| expr SLASH expr { Logger::Debug("binary-expr"); }
-| expr DIV expr { Logger::Debug("binary-expr"); }
-| expr MOD expr { Logger::Debug("binary-expr"); }
-| expr OR expr { Logger::Debug("binary-expr"); }
-| expr AND expr { Logger::Debug("binary-expr"); }
-| expr LT expr { Logger::Debug("binary-expr"); }
-| expr LE expr { Logger::Debug("binary-expr"); }
-| expr GT expr { Logger::Debug("binary-expr"); }
-| expr GE expr { Logger::Debug("binary-expr"); }
-| expr EQ expr { Logger::Debug("binary-expr"); }
-| expr NE expr { Logger::Debug("binary-expr"); }
-| ID LPAREN actual_params RPAREN { Logger::Debug("proc-call-expr"); }
-| ID LCBRAC comp_values RCBRAC { Logger::Debug("record-construct-expr"); }
-| ID LSABRAC array_values RSABRAC { Logger::Debug("array-construct-expr"); }
+  number { $$ = MAKE_TOKEN(NumberExpr, @$, $1); }
+| lvalue { $$ = MAKE_TOKEN(LvalueExpr, @$, $1); }
+| LPAREN expr RPAREN { $$ = MAKE_TOKEN(ParenExpr, @$, $2); }
+| PLUS expr %prec POS { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
+| MINUS expr %prec NEG { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
+| NOT expr { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
+| expr PLUS expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr MINUS expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr STAR expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr SLASH expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr DIV expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr MOD expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr OR expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr AND expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr LT expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr LE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr GT expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr GE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr EQ expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| expr NE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
+| ID LPAREN actual_params RPAREN { $$ = MAKE_TOKEN(ProcCallExpr, @$, $1, $3); }
+| ID LCBRAC comp_values RCBRAC { $$ = MAKE_TOKEN(RecordConstrExpr, @$, $1, $3); }
+| ID LSABRAC array_values RSABRAC { $$ = MAKE_TOKEN(ArrayConstrExpr, @$, $1, $3); }
 ;
 
 write_exprs:
-  write_expr {}
-| write_exprs COMMA write_expr {}
+  write_expr { $$ = MAKE_TOKEN(WriteExprs, @$); $$->Insert(MOVE($1)); }
+| write_exprs COMMA write_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 write_expr:
-  STRING {}
-| expr {}
+  STRING { $$ = MAKE_TOKEN(WriteExpr, @$, $1); }
+| expr { $$ = MAKE_TOKEN(WriteExpr, @$, $1); }
 ;
 
 assign_exprs:
-  assign_expr {}
-| assign_exprs SEMICOLON assign_expr {}
+  assign_expr { $$ = MAKE_TOKEN(AssignExprs, @$); $$->Insert(MOVE($1)); }
+| assign_exprs SEMICOLON assign_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 assign_expr:
-  ID ASSIGN expr {}
+  ID ASSIGN expr { $$ = MAKE_TOKEN(AssignExpr, @$, $ID, $expr); }
 ;
 
 array_exprs:
-  array_expr {}
-| array_exprs COMMA array_expr {}
+  array_expr { $$ = MAKE_TOKEN(ArrayExprs, @$); $$->Insert(MOVE($1)); }
+| array_exprs COMMA array_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 array_expr:
-  expr {}
-| expr[n] OF expr[v] {}
+  expr[v] { $$ = MAKE_TOKEN(ArrayExpr, @$, $v); }
+| expr[n] OF expr[v] { $$ = MAKE_TOKEN(ArrayExpr, @$, $v, $n); }
 ;
 
 number:
-  INTEGER {}
-| REAL {}
+  INTEGER { $$ = MAKE_TOKEN(Number, @$, $1); }
+| REAL { $$ = MAKE_TOKEN(Number, @$, $1); }
 ;
 
 lvalues:
-  lvalue {}
-| lvalues COMMA lvalue {}
+  lvalue { $$ = MAKE_TOKEN(Lvalues, @$); $$->Insert(MOVE($1)); }
+| lvalues COMMA lvalue { $$ = MOVE($1); $$->Insert(MOVE($3)); }
 ;
 
 lvalue:
-  ID {}
-| lvalue LSBRAC expr RSBRAC {}
-| lvalue DOT ID {}
+  ID { $$ = MAKE_TOKEN(IdLvalue, @$, $ID); }
+| lvalue LSBRAC expr RSBRAC { $$ = MAKE_TOKEN(ArrayElemLvalue, @$, $lvalue, $expr); }
+| lvalue DOT ID { $$ = MAKE_TOKEN(RecordCompLvalue, @$, $lvalue, $ID); }
 ;
 
 comp_values:
-  assign_exprs { Logger::Debug("comp-values"); }
+  assign_exprs { $$ = MOVE($1); }
 ;
 
 array_values:
-  array_exprs { Logger::Debug("array-values"); }
+  array_exprs { $$ = MOVE($1); }
 ;
 %%
 

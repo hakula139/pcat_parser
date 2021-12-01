@@ -16,6 +16,7 @@ class Node {
   virtual void UpdateDepth(int depth);
   virtual void Print(std::ostream& os) const;
 
+  yy::location loc() const { return loc_; }
   void set_loc(const yy::location& loc) { loc_ = loc; }
   void set_depth(int depth) { depth_ = depth; }
 
@@ -46,11 +47,10 @@ class Nodes : public Node {
  public:
   explicit Nodes(const yy::location& loc) : Node{loc} {}
 
-  void Insert(UPtr<Node> node) { data_.push_back(std::move(node)); }
+  void Insert(UPtr<Node> p_node);
+  void Insert(UPtr<Nodes> p_nodes);
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
-
-  void operator+=(UPtr<Node> node) { Insert(std::move(node)); }
 
  protected:
   const std::string name_ = "nodes";

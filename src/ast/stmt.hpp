@@ -231,7 +231,7 @@ class ExitStmt : public Stmt {
 
 class ReturnStmt : public Stmt {
  public:
-  explicit ReturnStmt(const yy::location& loc, UPtr<Expr> p_expr)
+  explicit ReturnStmt(const yy::location& loc, UPtr<Expr> p_expr = nullptr)
       : Stmt{loc}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;

@@ -27,6 +27,17 @@ void ValueNode::Print(std::ostream& os) const {
   os << " " << value() << "\n";
 }
 
+void Nodes::Insert(UPtr<Node> p_node) {
+  loc_ += p_node->loc();
+  data_.push_back(std::move(p_node));
+}
+
+void Nodes::Insert(UPtr<Nodes> p_nodes) {
+  for (auto&& p_node : p_nodes->data_) {
+    Insert(std::move(p_node));
+  }
+}
+
 void Nodes::UpdateDepth(int depth) {
   Node::UpdateDepth(depth);
   for (auto&& p_node : data_) {
