@@ -8,28 +8,15 @@
 #include <vector>
 
 #include "../location.hpp"
+#include "expr.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
 #include "type.hpp"
 
-class Param;
-class Params;
-class FormalParam;
-class FormalParams;
-class ActualParams;
-class ReadParams;
-class WriteParams;
-
-using ParamPtr = std::unique_ptr<Param>;
-using ParamsPtr = std::unique_ptr<Params>;
-using FormalParamPtr = std::unique_ptr<FormalParam>;
-using FormalParamsPtr = std::unique_ptr<FormalParams>;
-using ActualParamsPtr = std::unique_ptr<ActualParams>;
-using ReadParamsPtr = std::unique_ptr<ReadParams>;
-using WriteParamsPtr = std::unique_ptr<WriteParams>;
-
 class Param : public Node {
  public:
+  using Ptr = std::unique_ptr<Param>;
+
   explicit Param(const yy::location& loc) : Node{loc} {}
 
  protected:
@@ -38,16 +25,21 @@ class Param : public Node {
 
 class Params : public Nodes {
  public:
+  using Ptr = std::unique_ptr<Params>;
+
   explicit Params(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "parameter list";
-  std::vector<ParamPtr> data_;
+  std::vector<Param::Ptr> data_;
 };
 
 class FormalParam : public Param {
  public:
-  explicit FormalParam(const yy::location& loc, IdsPtr p_ids, TypePtr p_type)
+  using Ptr = std::unique_ptr<FormalParam>;
+
+  explicit FormalParam(
+      const yy::location& loc, Ids::Ptr p_ids, Type::Ptr p_type)
       : Param{loc}, p_ids_{std::move(p_ids)}, p_type_{std::move(p_type)} {}
 
   void UpdateDepth(int depth) override;
@@ -55,21 +47,25 @@ class FormalParam : public Param {
 
  protected:
   const std::string name_ = "formal parameter";
-  IdsPtr p_ids_;
-  TypePtr p_type_;
+  Ids::Ptr p_ids_;
+  Type::Ptr p_type_;
 };
 
 class FormalParams : public Params {
  public:
+  using Ptr = std::unique_ptr<FormalParams>;
+
   explicit FormalParams(const yy::location& loc) : Params{loc} {}
 
  protected:
   const std::string name_ = "formal parameter list";
-  std::vector<FormalParamPtr> data_;
+  std::vector<FormalParam::Ptr> data_;
 };
 
 class ActualParams : public Exprs {
  public:
+  using Ptr = std::unique_ptr<ActualParams>;
+
   explicit ActualParams(const yy::location& loc) : Exprs{loc} {}
 
  protected:
@@ -78,6 +74,8 @@ class ActualParams : public Exprs {
 
 class ReadParams : public Lvalues {
  public:
+  using Ptr = std::unique_ptr<ReadParams>;
+
   explicit ReadParams(const yy::location& loc) : Lvalues{loc} {}
 
  protected:
@@ -86,6 +84,8 @@ class ReadParams : public Lvalues {
 
 class WriteParams : public WriteExprs {
  public:
+  using Ptr = std::unique_ptr<WriteParams>;
+
   explicit WriteParams(const yy::location& loc) : WriteExprs{loc} {}
 
  protected:

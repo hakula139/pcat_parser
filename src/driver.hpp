@@ -17,14 +17,16 @@ class Driver {
   int Parse(const std::string& in_path, const std::string& out_path);
 
   yy::Parser::location_type& loc() { return loc_; }
-  void set_program(ProgramPtr p_program) { p_program_ = std::move(p_program); }
+  void set_program(Program::Ptr p_program) {
+    p_program_ = std::move(p_program);
+  }
 
  protected:
   yy::Lexer lexer_;
   yy::Parser parser_;
 
   yy::Parser::location_type loc_;
-  ProgramPtr p_program_;
+  Program::Ptr p_program_;
 
   bool trace_parsing_ = LOG_LEVEL <= TRACE;
   bool trace_scanning_ = LOG_LEVEL <= TRACE;

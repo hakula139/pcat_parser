@@ -10,24 +10,10 @@
 #include "identifier.hpp"
 #include "node.hpp"
 
-class Type;
-class TypeAnnot;
-class Component;
-class Components;
-class IdType;
-class ArrayType;
-class RecordType;
-
-using TypePtr = std::unique_ptr<Type>;
-using TypeAnnotPtr = std::unique_ptr<TypeAnnot>;
-using ComponentPtr = std::unique_ptr<Component>;
-using ComponentsPtr = std::unique_ptr<Components>;
-using IdTypePtr = std::unique_ptr<IdType>;
-using ArrayTypePtr = std::unique_ptr<ArrayType>;
-using RecordTypePtr = std::unique_ptr<RecordType>;
-
 class Type : public Node {
  public:
+  using Ptr = std::unique_ptr<Type>;
+
   explicit Type(const yy::location& loc) : Node{loc} {}
 
  protected:
@@ -36,7 +22,9 @@ class Type : public Node {
 
 class TypeAnnot : public Node {
  public:
-  explicit TypeAnnot(const yy::location& loc, TypePtr p_type)
+  using Ptr = std::unique_ptr<TypeAnnot>;
+
+  explicit TypeAnnot(const yy::location& loc, Type::Ptr p_type)
       : Node{loc}, p_type_{std::move(p_type)} {}
 
   void UpdateDepth(int depth) override;
@@ -44,12 +32,14 @@ class TypeAnnot : public Node {
 
  protected:
   const std::string name_ = "type annotation";
-  TypePtr p_type_;
+  Type::Ptr p_type_;
 };
 
 class Component : public Node {
  public:
-  explicit Component(const yy::location& loc, IdPtr p_id, TypePtr p_type)
+  using Ptr = std::unique_ptr<Component>;
+
+  explicit Component(const yy::location& loc, Id::Ptr p_id, Type::Ptr p_type)
       : Node{loc}, p_id_{std::move(p_id)}, p_type_{std::move(p_type)} {}
 
   void UpdateDepth(int depth) override;
@@ -57,12 +47,14 @@ class Component : public Node {
 
  protected:
   const std::string name_ = "component";
-  IdPtr p_id_;
-  TypePtr p_type_;
+  Id::Ptr p_id_;
+  Type::Ptr p_type_;
 };
 
 class Components : public Nodes {
  public:
+  using Ptr = std::unique_ptr<Components>;
+
   explicit Components(const yy::location& loc) : Nodes{loc} {}
 
  protected:
@@ -71,7 +63,9 @@ class Components : public Nodes {
 
 class IdType : public Type {
  public:
-  explicit IdType(const yy::location& loc, IdPtr p_id)
+  using Ptr = std::unique_ptr<IdType>;
+
+  explicit IdType(const yy::location& loc, Id::Ptr p_id)
       : Type{loc}, p_id_{std::move(p_id)} {}
 
   void UpdateDepth(int depth) override;
@@ -79,12 +73,14 @@ class IdType : public Type {
 
  protected:
   const std::string name_ = "identifier type";
-  IdPtr p_id_;
+  Id::Ptr p_id_;
 };
 
 class ArrayType : public Type {
  public:
-  explicit ArrayType(const yy::location& loc, TypePtr p_type)
+  using Ptr = std::unique_ptr<ArrayType>;
+
+  explicit ArrayType(const yy::location& loc, Type::Ptr p_type)
       : Type{loc}, p_type_{std::move(p_type)} {}
 
   void UpdateDepth(int depth) override;
@@ -92,12 +88,14 @@ class ArrayType : public Type {
 
  protected:
   const std::string name_ = "array type";
-  TypePtr p_type_;
+  Type::Ptr p_type_;
 };
 
 class RecordType : public Type {
  public:
-  explicit RecordType(const yy::location& loc, ComponentsPtr p_components)
+  using Ptr = std::unique_ptr<RecordType>;
+
+  explicit RecordType(const yy::location& loc, Components::Ptr p_components)
       : Type{loc}, p_components_{std::move(p_components)} {}
 
   void UpdateDepth(int depth) override;
@@ -105,7 +103,7 @@ class RecordType : public Type {
 
  protected:
   const std::string name_ = "record type";
-  ComponentsPtr p_components_;
+  Components::Ptr p_components_;
 };
 
 #endif  // SRC_AST_TYPE_HPP_

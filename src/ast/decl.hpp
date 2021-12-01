@@ -13,28 +13,10 @@
 #include "param.hpp"
 #include "type.hpp"
 
-class Decl;
-class Decls;
-class VarDecl;
-class VarDecls;
-class TypeDecl;
-class TypeDecls;
-class ProcDecl;
-class ProcDecls;
-class Body;
-
-using DeclPtr = std::unique_ptr<Decl>;
-using DeclsPtr = std::unique_ptr<Decls>;
-using VarDeclPtr = std::unique_ptr<VarDecl>;
-using VarDeclsPtr = std::unique_ptr<VarDecls>;
-using TypeDeclPtr = std::unique_ptr<TypeDecl>;
-using TypeDeclsPtr = std::unique_ptr<TypeDecls>;
-using ProcDeclPtr = std::unique_ptr<ProcDecl>;
-using ProcDeclsPtr = std::unique_ptr<ProcDecls>;
-using BodyPtr = std::unique_ptr<Body>;
-
 class Decl : public Node {
  public:
+  using Ptr = std::unique_ptr<Decl>;
+
   explicit Decl(const yy::location& loc) : Node{loc} {}
 
  protected:
@@ -43,20 +25,24 @@ class Decl : public Node {
 
 class Decls : public Nodes {
  public:
+  using Ptr = std::unique_ptr<Decls>;
+
   explicit Decls(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "declaration list";
-  std::vector<DeclPtr> data_;
+  std::vector<Decl::Ptr> data_;
 };
 
 class VarDecl : public Decl {
  public:
+  using Ptr = std::unique_ptr<VarDecl>;
+
   explicit VarDecl(
       const yy::location& loc,
-      IdsPtr p_ids,
-      TypeAnnotPtr p_type_annot,
-      ExprPtr p_expr)
+      Ids::Ptr p_ids,
+      TypeAnnot::Ptr p_type_annot,
+      Expr::Ptr p_expr)
       : Decl{loc},
         p_ids_{std::move(p_ids)},
         p_type_annot_{std::move(p_type_annot)},
@@ -67,23 +53,27 @@ class VarDecl : public Decl {
 
  protected:
   const std::string name_ = "variable declaration";
-  IdsPtr p_ids_;
-  TypeAnnotPtr p_type_annot_;
-  ExprPtr p_expr_;
+  Ids::Ptr p_ids_;
+  TypeAnnot::Ptr p_type_annot_;
+  Expr::Ptr p_expr_;
 };
 
 class VarDecls : public Decls {
  public:
+  using Ptr = std::unique_ptr<VarDecls>;
+
   explicit VarDecls(const yy::location& loc) : Decls{loc} {}
 
  protected:
   const std::string name_ = "variable declaration list";
-  std::vector<VarDeclPtr> data_;
+  std::vector<VarDecl::Ptr> data_;
 };
 
 class TypeDecl : public Decl {
  public:
-  explicit TypeDecl(const yy::location& loc, IdPtr p_id, TypePtr p_type)
+  using Ptr = std::unique_ptr<TypeDecl>;
+
+  explicit TypeDecl(const yy::location& loc, Id::Ptr p_id, Type::Ptr p_type)
       : Decl{loc}, p_id_{std::move(p_id)}, p_type_{std::move(p_type)} {}
 
   void UpdateDepth(int depth) override;
@@ -91,27 +81,31 @@ class TypeDecl : public Decl {
 
  protected:
   const std::string name_ = "type declaration";
-  IdPtr p_id_;
-  TypePtr p_type_;
+  Id::Ptr p_id_;
+  Type::Ptr p_type_;
 };
 
 class TypeDecls : public Decls {
  public:
+  using Ptr = std::unique_ptr<TypeDecls>;
+
   explicit TypeDecls(const yy::location& loc) : Decls{loc} {}
 
  protected:
   const std::string name_ = "type declaration list";
-  std::vector<TypeDeclPtr> data_;
+  std::vector<TypeDecl::Ptr> data_;
 };
 
 class ProcDecl : public Decl {
  public:
+  using Ptr = std::unique_ptr<ProcDecl>;
+
   explicit ProcDecl(
       const yy::location& loc,
-      IdPtr p_id,
-      FormalParamsPtr p_formal_params,
-      TypeAnnotPtr p_type_annot,
-      BodyPtr p_body)
+      Id::Ptr p_id,
+      FormalParams::Ptr p_formal_params,
+      TypeAnnot::Ptr p_type_annot,
+      Body::Ptr p_body)
       : Decl{loc},
         p_id_{std::move(p_id)},
         p_formal_params_{std::move(p_formal_params)},
@@ -123,19 +117,21 @@ class ProcDecl : public Decl {
 
  protected:
   const std::string name_ = "type declaration";
-  IdPtr p_id_;
-  FormalParamsPtr p_formal_params_;
-  TypeAnnotPtr p_type_annot_;
-  BodyPtr p_body_;
+  Id::Ptr p_id_;
+  FormalParams::Ptr p_formal_params_;
+  TypeAnnot::Ptr p_type_annot_;
+  Body::Ptr p_body_;
 };
 
 class ProcDecls : public Decls {
  public:
+  using Ptr = std::unique_ptr<ProcDecls>;
+
   explicit ProcDecls(const yy::location& loc) : Decls{loc} {}
 
  protected:
   const std::string name_ = "procedure declaration list";
-  std::vector<ProcDeclPtr> data_;
+  std::vector<ProcDecl::Ptr> data_;
 };
 
 #endif  // SRC_AST_DECL_HPP_

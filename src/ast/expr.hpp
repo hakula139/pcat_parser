@@ -16,46 +16,10 @@
 #include "operator.hpp"
 #include "param.hpp"
 
-class Expr;
-class Exprs;
-class NumberExpr;
-class LvalueExpr;
-class ParenExpr;
-class UnaryExpr;
-class BinaryExpr;
-class ProcCallExpr;
-class RecordConstrExpr;
-class CompValues;
-class ArrayConstrExpr;
-class ArrayValues;
-class WriteExpr;
-class WriteExprs;
-class AssignExpr;
-class AssignExprs;
-class ArrayExpr;
-class ArrayExprs;
-
-using ExprPtr = std::unique_ptr<Expr>;
-using ExprsPtr = std::unique_ptr<Exprs>;
-using NumberExprPtr = std::unique_ptr<NumberExpr>;
-using LvalueExprPtr = std::unique_ptr<LvalueExpr>;
-using ParenExprPtr = std::unique_ptr<ParenExpr>;
-using UnaryExprPtr = std::unique_ptr<UnaryExpr>;
-using BinaryExprPtr = std::unique_ptr<BinaryExpr>;
-using ProcCallExprPtr = std::unique_ptr<ProcCallExpr>;
-using RecordConstrExprPtr = std::unique_ptr<RecordConstrExpr>;
-using CompValuesPtr = std::unique_ptr<CompValues>;
-using ArrayConstrExprPtr = std::unique_ptr<ArrayConstrExpr>;
-using ArrayValuesPtr = std::unique_ptr<ArrayValues>;
-using WriteExprPtr = std::unique_ptr<WriteExpr>;
-using WriteExprsPtr = std::unique_ptr<WriteExprs>;
-using AssignExprPtr = std::unique_ptr<AssignExpr>;
-using AssignExprsPtr = std::unique_ptr<AssignExprs>;
-using ArrayExprPtr = std::unique_ptr<ArrayExpr>;
-using ArrayExprsPtr = std::unique_ptr<ArrayExprs>;
-
 class Expr : public Node {
  public:
+  using Ptr = std::unique_ptr<Expr>;
+
   explicit Expr(const yy::location& loc, const std::string& value = "")
       : Node{loc}, value_{value} {}
 
@@ -69,16 +33,20 @@ class Expr : public Node {
 
 class Exprs : public Nodes {
  public:
+  using Ptr = std::unique_ptr<Exprs>;
+
   explicit Exprs(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "expression list";
-  std::vector<ExprPtr> data_;
+  std::vector<Expr::Ptr> data_;
 };
 
 class NumberExpr : public Expr {
  public:
-  explicit NumberExpr(const yy::location& loc, NumberPtr p_number)
+  using Ptr = std::unique_ptr<NumberExpr>;
+
+  explicit NumberExpr(const yy::location& loc, Number::Ptr p_number)
       : Expr{loc}, p_number_{std::move(p_number)} {}
 
   void UpdateDepth(int depth) override;
@@ -86,12 +54,14 @@ class NumberExpr : public Expr {
 
  protected:
   const std::string name_ = "number expression";
-  NumberPtr p_number_;
+  Number::Ptr p_number_;
 };
 
 class LvalueExpr : public Expr {
  public:
-  explicit LvalueExpr(const yy::location& loc, LvaluePtr p_lvalue)
+  using Ptr = std::unique_ptr<LvalueExpr>;
+
+  explicit LvalueExpr(const yy::location& loc, Lvalue::Ptr p_lvalue)
       : Expr{loc}, p_lvalue_{std::move(p_lvalue)} {}
 
   void UpdateDepth(int depth) override;
@@ -99,12 +69,14 @@ class LvalueExpr : public Expr {
 
  protected:
   const std::string name_ = "lvalue expression";
-  LvaluePtr p_lvalue_;
+  Lvalue::Ptr p_lvalue_;
 };
 
 class ParenExpr : public Expr {
  public:
-  explicit ParenExpr(const yy::location& loc, ExprPtr p_expr)
+  using Ptr = std::unique_ptr<ParenExpr>;
+
+  explicit ParenExpr(const yy::location& loc, Expr::Ptr p_expr)
       : Expr{loc}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;
@@ -112,12 +84,14 @@ class ParenExpr : public Expr {
 
  protected:
   const std::string name_ = "parenthesis expression";
-  ExprPtr p_expr_;
+  Expr::Ptr p_expr_;
 };
 
 class UnaryExpr : public Expr {
  public:
-  explicit UnaryExpr(const yy::location& loc, OpPtr p_op, ExprPtr p_expr)
+  using Ptr = std::unique_ptr<UnaryExpr>;
+
+  explicit UnaryExpr(const yy::location& loc, Op::Ptr p_op, Expr::Ptr p_expr)
       : Expr{loc}, p_op_{std::move(p_op)}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;
@@ -125,14 +99,19 @@ class UnaryExpr : public Expr {
 
  protected:
   const std::string name_ = "unary expression";
-  OpPtr p_op_;
-  ExprPtr p_expr_;
+  Op::Ptr p_op_;
+  Expr::Ptr p_expr_;
 };
 
 class BinaryExpr : public Expr {
  public:
+  using Ptr = std::unique_ptr<BinaryExpr>;
+
   explicit BinaryExpr(
-      const yy::location& loc, ExprPtr p_expr1, OpPtr p_op, ExprPtr p_expr2)
+      const yy::location& loc,
+      Expr::Ptr p_expr1,
+      Op::Ptr p_op,
+      Expr::Ptr p_expr2)
       : Expr{loc},
         p_expr1_{std::move(p_expr1)},
         p_op_{std::move(p_op)},
@@ -143,15 +122,17 @@ class BinaryExpr : public Expr {
 
  protected:
   const std::string name_ = "binary expression";
-  ExprPtr p_expr1_;
-  OpPtr p_op_;
-  ExprPtr p_expr2_;
+  Expr::Ptr p_expr1_;
+  Op::Ptr p_op_;
+  Expr::Ptr p_expr2_;
 };
 
 class ProcCallExpr : public Expr {
  public:
+  using Ptr = std::unique_ptr<ProcCallExpr>;
+
   explicit ProcCallExpr(
-      const yy::location& loc, IdPtr p_id, ActualParamsPtr p_actual_params)
+      const yy::location& loc, Id::Ptr p_id, ActualParams::Ptr p_actual_params)
       : Expr{loc},
         p_id_{std::move(p_id)},
         p_actual_params_{std::move(p_actual_params)} {}
@@ -161,14 +142,16 @@ class ProcCallExpr : public Expr {
 
  protected:
   const std::string name_ = "procedure call expression";
-  IdPtr p_id_;
-  ActualParamsPtr p_actual_params_;
+  Id::Ptr p_id_;
+  ActualParams::Ptr p_actual_params_;
 };
 
 class RecordConstrExpr : public Expr {
  public:
+  using Ptr = std::unique_ptr<RecordConstrExpr>;
+
   explicit RecordConstrExpr(
-      const yy::location& loc, IdPtr p_id, CompValuesPtr p_comp_values)
+      const yy::location& loc, Id::Ptr p_id, CompValues::Ptr p_comp_values)
       : Expr{loc},
         p_id_{std::move(p_id)},
         p_comp_values_{std::move(p_comp_values)} {}
@@ -178,12 +161,14 @@ class RecordConstrExpr : public Expr {
 
  protected:
   const std::string name_ = "record construction expression";
-  IdPtr p_id_;
-  CompValuesPtr p_comp_values_;
+  Id::Ptr p_id_;
+  CompValues::Ptr p_comp_values_;
 };
 
 class CompValues : public AssignExprs {
  public:
+  using Ptr = std::unique_ptr<CompValues>;
+
   explicit CompValues(const yy::location& loc) : AssignExprs{loc} {}
 
  protected:
@@ -192,8 +177,10 @@ class CompValues : public AssignExprs {
 
 class ArrayConstrExpr : public Expr {
  public:
+  using Ptr = std::unique_ptr<ArrayConstrExpr>;
+
   explicit ArrayConstrExpr(
-      const yy::location& loc, IdPtr p_id, ArrayValuesPtr p_array_values)
+      const yy::location& loc, Id::Ptr p_id, ArrayValues::Ptr p_array_values)
       : Expr{loc},
         p_id_{std::move(p_id)},
         p_array_values_{std::move(p_array_values)} {}
@@ -203,12 +190,14 @@ class ArrayConstrExpr : public Expr {
 
  protected:
   const std::string name_ = "array construction expression";
-  IdPtr p_id_;
-  ArrayValuesPtr p_array_values_;
+  Id::Ptr p_id_;
+  ArrayValues::Ptr p_array_values_;
 };
 
 class ArrayValues : public ArrayExprs {
  public:
+  using Ptr = std::unique_ptr<ArrayValues>;
+
   explicit ArrayValues(const yy::location& loc) : ArrayExprs{loc} {}
 
  protected:
@@ -216,9 +205,10 @@ class ArrayValues : public ArrayExprs {
 };
 
 class WriteExpr : public Expr {
-  using UnionPtr = std::variant<StringPtr, ExprPtr>;
-
  public:
+  using Ptr = std::unique_ptr<WriteExpr>;
+  using UnionPtr = std::variant<String::Ptr, Expr::Ptr>;
+
   explicit WriteExpr(const yy::location& loc, UnionPtr p_write_expr)
       : Expr{loc}, p_write_expr_{std::move(p_write_expr)} {}
 
@@ -232,16 +222,20 @@ class WriteExpr : public Expr {
 
 class WriteExprs : public Nodes {
  public:
+  using Ptr = std::unique_ptr<WriteExprs>;
+
   explicit WriteExprs(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "write expression list";
-  std::vector<WriteExprPtr> data_;
+  std::vector<WriteExpr::Ptr> data_;
 };
 
 class AssignExpr : public Expr {
  public:
-  explicit AssignExpr(const yy::location& loc, IdPtr p_id, ExprPtr p_expr)
+  using Ptr = std::unique_ptr<AssignExpr>;
+
+  explicit AssignExpr(const yy::location& loc, Id::Ptr p_id, Expr::Ptr p_expr)
       : Expr{loc}, p_id_{std::move(p_id)}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;
@@ -249,23 +243,27 @@ class AssignExpr : public Expr {
 
  protected:
   const std::string name_ = "assign expression";
-  IdPtr p_id_;
-  ExprPtr p_expr_;
+  Id::Ptr p_id_;
+  Expr::Ptr p_expr_;
 };
 
 class AssignExprs : public Nodes {
  public:
+  using Ptr = std::unique_ptr<AssignExprs>;
+
   explicit AssignExprs(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "assign expression list";
-  std::vector<AssignExprPtr> data_;
+  std::vector<AssignExpr::Ptr> data_;
 };
 
 class ArrayExpr : public Expr {
  public:
+  using Ptr = std::unique_ptr<ArrayExpr>;
+
   explicit ArrayExpr(
-      const yy::location& loc, ExprPtr p_value, ExprPtr p_num = nullptr)
+      const yy::location& loc, Expr::Ptr p_value, Expr::Ptr p_num = nullptr)
       : Expr{loc}, p_value_{std::move(p_value)}, p_num_{std::move(p_num)} {}
 
   void UpdateDepth(int depth) override;
@@ -273,17 +271,19 @@ class ArrayExpr : public Expr {
 
  protected:
   const std::string name_ = "array expression";
-  ExprPtr p_value_;
-  ExprPtr p_num_;
+  Expr::Ptr p_value_;
+  Expr::Ptr p_num_;
 };
 
 class ArrayExprs : public Nodes {
  public:
+  using Ptr = std::unique_ptr<ArrayExprs>;
+
   explicit ArrayExprs(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "array expression list";
-  std::vector<ArrayExprPtr> data_;
+  std::vector<ArrayExpr::Ptr> data_;
 };
 
 #endif  // SRC_AST_EXPR_HPP_

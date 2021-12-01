@@ -11,13 +11,11 @@
 #include "node.hpp"
 #include "stmt.hpp"
 
-class Body;
-
-using BodyPtr = std::unique_ptr<Body>;
-
 class Body : public Node {
  public:
-  explicit Body(const yy::location& loc, DeclsPtr p_decls, StmtsPtr p_stmts)
+  using Ptr = std::unique_ptr<Body>;
+
+  explicit Body(const yy::location& loc, Decls::Ptr p_decls, Stmts::Ptr p_stmts)
       : Node{loc}, p_decls_{std::move(p_decls)}, p_stmts_{std::move(p_stmts)} {}
 
   void UpdateDepth(int depth) override;
@@ -25,8 +23,8 @@ class Body : public Node {
 
  protected:
   const std::string name_ = "body";
-  DeclsPtr p_decls_;
-  StmtsPtr p_stmts_;
+  Decls::Ptr p_decls_;
+  Stmts::Ptr p_stmts_;
 };
 
 #endif  // SRC_AST_BODY_HPP_

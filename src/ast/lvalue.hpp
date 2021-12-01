@@ -9,21 +9,13 @@
 
 #include "../location.hpp"
 #include "expr.hpp"
-
-class Lvalue;
-class Lvalues;
-class IdLvalue;
-class ArrayElemLvalue;
-class RecordCompLvalue;
-
-using LvaluePtr = std::unique_ptr<Lvalue>;
-using LvaluesPtr = std::unique_ptr<Lvalues>;
-using IdLvaluePtr = std::unique_ptr<IdLvalue>;
-using ArrayElemLvaluePtr = std::unique_ptr<ArrayElemLvalue>;
-using RecordCompLvaluePtr = std::unique_ptr<RecordCompLvalue>;
+#include "identifier.hpp"
+#include "node.hpp"
 
 class Lvalue : public Expr {
  public:
+  using Ptr = std::unique_ptr<Lvalue>;
+
   explicit Lvalue(const yy::location& loc) : Expr{loc} {}
 
  protected:
@@ -32,16 +24,20 @@ class Lvalue : public Expr {
 
 class Lvalues : public Nodes {
  public:
+  using Ptr = std::unique_ptr<Lvalues>;
+
   explicit Lvalues(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "lvalue list";
-  std::vector<LvaluePtr> data_;
+  std::vector<Lvalue::Ptr> data_;
 };
 
 class IdLvalue : public Lvalue {
  public:
-  explicit IdLvalue(const yy::location& loc, IdPtr p_id)
+  using Ptr = std::unique_ptr<IdLvalue>;
+
+  explicit IdLvalue(const yy::location& loc, Id::Ptr p_id)
       : Lvalue{loc}, p_id_{std::move(p_id)} {}
 
   void UpdateDepth(int depth) override;
@@ -49,13 +45,15 @@ class IdLvalue : public Lvalue {
 
  protected:
   const std::string name_ = "identifier lvalue";
-  IdPtr p_id_;
+  Id::Ptr p_id_;
 };
 
 class ArrayElemLvalue : public Lvalue {
  public:
+  using Ptr = std::unique_ptr<ArrayElemLvalue>;
+
   explicit ArrayElemLvalue(
-      const yy::location& loc, LvaluePtr p_lvalue, ExprPtr p_expr)
+      const yy::location& loc, Lvalue::Ptr p_lvalue, Expr::Ptr p_expr)
       : Lvalue{loc},
         p_lvalue_{std::move(p_lvalue)},
         p_expr_{std::move(p_expr)} {}
@@ -65,14 +63,16 @@ class ArrayElemLvalue : public Lvalue {
 
  protected:
   const std::string name_ = "array element lvalue";
-  LvaluePtr p_lvalue_;
-  ExprPtr p_expr_;
+  Lvalue::Ptr p_lvalue_;
+  Expr::Ptr p_expr_;
 };
 
 class RecordCompLvalue : public Lvalue {
  public:
+  using Ptr = std::unique_ptr<RecordCompLvalue>;
+
   explicit RecordCompLvalue(
-      const yy::location& loc, LvaluePtr p_lvalue, IdPtr p_id)
+      const yy::location& loc, Lvalue::Ptr p_lvalue, Id::Ptr p_id)
       : Lvalue{loc}, p_lvalue_{std::move(p_lvalue)}, p_id_{std::move(p_id)} {}
 
   void UpdateDepth(int depth) override;
@@ -80,8 +80,8 @@ class RecordCompLvalue : public Lvalue {
 
  protected:
   const std::string name_ = "record component lvalue";
-  LvaluePtr p_lvalue_;
-  IdPtr p_id_;
+  Lvalue::Ptr p_lvalue_;
+  Id::Ptr p_id_;
 };
 
 #endif  // SRC_AST_LVALUE_HPP_

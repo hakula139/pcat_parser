@@ -10,13 +10,11 @@
 #include "body.hpp"
 #include "node.hpp"
 
-class Program;
-
-using ProgramPtr = std::unique_ptr<Program>;
-
 class Program : public Node {
  public:
-  explicit Program(const yy::location& loc, BodyPtr p_body)
+  using Ptr = std::unique_ptr<Program>;
+
+  explicit Program(const yy::location& loc, Body::Ptr p_body)
       : Node{loc}, p_body_{std::move(p_body)} {}
 
   void UpdateDepth(int depth) override;
@@ -24,7 +22,7 @@ class Program : public Node {
 
  protected:
   const std::string name_ = "program";
-  BodyPtr p_body_;
+  Body::Ptr p_body_;
 };
 
 #endif  // SRC_AST_PROGRAM_HPP_

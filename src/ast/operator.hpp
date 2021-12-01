@@ -7,12 +7,10 @@
 #include "../location.hpp"
 #include "expr.hpp"
 
-class Op;
-
-using OpPtr = std::unique_ptr<Op>;
-
 class Op : public Expr {
  public:
+  using Ptr = std::unique_ptr<Op>;
+
   explicit Op(const yy::location& loc, const std::string& value)
       : Expr{loc, value} {}
 

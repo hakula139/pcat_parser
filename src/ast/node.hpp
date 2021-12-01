@@ -9,18 +9,10 @@
 
 #include "../location.hpp"
 
-class Node;
-template <class T>
-class Terminal;
-class Nodes;
-
-using NodePtr = std::unique_ptr<Node>;
-template <class T>
-using TerminalPtr = std::unique_ptr<Terminal<T>>;
-using NodesPtr = std::unique_ptr<Nodes>;
-
 class Node {
  public:
+  using Ptr = std::unique_ptr<Node>;
+
   explicit Node(const yy::location& loc) : loc_{loc} {}
 
   virtual void UpdateDepth(int depth);
@@ -41,17 +33,19 @@ class Node {
 
 class Nodes : public Node {
  public:
+  using Ptr = std::unique_ptr<Nodes>;
+
   explicit Nodes(const yy::location& loc) : Node{loc} {}
 
-  void Insert(NodePtr node) { data_.push_back(node); }
+  void Insert(Node::Ptr node) { data_.push_back(node); }
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
-  void operator+=(NodePtr node) { Insert(std::move(node)); }
+  void operator+=(Node::Ptr node) { Insert(std::move(node)); }
 
  protected:
   const std::string name_ = "nodes";
-  std::vector<NodePtr> data_;
+  std::vector<Node::Ptr> data_;
 };
 
 #endif  // SRC_AST_NODE_HPP_
