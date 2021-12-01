@@ -59,65 +59,65 @@ int yyFlexLexer::yylex() {
 %define api.token.prefix {T_}
 %token
   // Reserved keywords
-  AND
-  ARRAY
-  BEGIN
-  BY
-  DIV
-  DO
-  ELSE
-  ELSIF
-  END
-  EXIT
-  FOR
-  IF
-  IN
-  IS
-  LOOP
-  MOD
-  NOT
-  OF
-  OR
-  OUT
-  PROCEDURE
-  PROGRAM
-  READ
-  RECORD
-  RETURN
-  THEN
-  TO
-  TYPE
-  VAR
-  WHILE
-  WRITE
+  <std::string>       AND
+  <std::string>       ARRAY
+  <std::string>       BEGIN
+  <std::string>       BY
+  <std::string>       DIV
+  <std::string>       DO
+  <std::string>       ELSE
+  <std::string>       ELSIF
+  <std::string>       END
+  <std::string>       EXIT
+  <std::string>       FOR
+  <std::string>       IF
+  <std::string>       IN
+  <std::string>       IS
+  <std::string>       LOOP
+  <std::string>       MOD
+  <std::string>       NOT
+  <std::string>       OF
+  <std::string>       OR
+  <std::string>       OUT
+  <std::string>       PROCEDURE
+  <std::string>       PROGRAM
+  <std::string>       READ
+  <std::string>       RECORD
+  <std::string>       RETURN
+  <std::string>       THEN
+  <std::string>       TO
+  <std::string>       TYPE
+  <std::string>       VAR
+  <std::string>       WHILE
+  <std::string>       WRITE
 
   // Operators
-  ASSIGN              ":="
-  PLUS                "+"
-  MINUS               "-"
-  STAR                "*"
-  SLASH               "/"
-  LT                  "<"
-  LE                  "<="
-  GT                  ">"
-  GE                  ">="
-  EQ                  "="
-  NE                  "<>"
+  <std::string>       ASSIGN              ":="
+  <std::string>       PLUS                "+"
+  <std::string>       MINUS               "-"
+  <std::string>       STAR                "*"
+  <std::string>       SLASH               "/"
+  <std::string>       LT                  "<"
+  <std::string>       LE                  "<="
+  <std::string>       GT                  ">"
+  <std::string>       GE                  ">="
+  <std::string>       EQ                  "="
+  <std::string>       NE                  "<>"
 
   // Delimiters
-  COLON               ":"
-  SEMICOLON           ";"
-  COMMA               ","
-  DOT                 "."
-  LPAREN              "("
-  RPAREN              ")"
-  LSBRAC              "["
-  RSBRAC              "]"
-  LCBRAC              "{"
-  RCBRAC              "}"
-  LSABRAC             "[<"
-  RSABRAC             ">]"
-  BACKSLASH           "\\"
+  <std::string>       COLON               ":"
+  <std::string>       SEMICOLON           ";"
+  <std::string>       COMMA               ","
+  <std::string>       DOT                 "."
+  <std::string>       LPAREN              "("
+  <std::string>       RPAREN              ")"
+  <std::string>       LSBRAC              "["
+  <std::string>       RSBRAC              "]"
+  <std::string>       LCBRAC              "{"
+  <std::string>       RCBRAC              "}"
+  <std::string>       LSABRAC             "[<"
+  <std::string>       RSABRAC             ">]"
+  <std::string>       BACKSLASH           "\\"
 
   // Constants
   <UPtr<Integer>>     INTEGER             "integer"
@@ -127,6 +127,14 @@ int yyFlexLexer::yylex() {
   // Identifiers
   <UPtr<Id>>          ID                  "identifier"
 ;
+
+%left                 OR;
+%left                 AND;
+%nonassoc             EQ NE;
+%nonassoc             LT LE GT GE;
+%left                 PLUS MINUS;
+%left                 STAR SLASH DIV MOD;
+%right                POS NEG NOT;
 
 %nterm
   // Programs
@@ -176,14 +184,6 @@ int yyFlexLexer::yylex() {
   <UPtr<CompValues>>          comp_values
   <UPtr<ArrayValues>>         array_values
 ;
-
-%left                 OR;
-%left                 AND;
-%nonassoc             EQ NE;
-%nonassoc             LT LE GT GE;
-%left                 PLUS MINUS;
-%left                 STAR SLASH DIV MOD;
-%right                POS NEG NOT;
 
 %%
 %start program;
@@ -429,9 +429,9 @@ lvalues:
 ;
 
 lvalue:
-  ID { $$ = MAKE_TOKEN(IdLvalue, @$, $ID); }
-| lvalue LSBRAC expr RSBRAC { $$ = MAKE_TOKEN(ArrayElemLvalue, @$, $lvalue, $expr); }
-| lvalue DOT ID { $$ = MAKE_TOKEN(RecordCompLvalue, @$, $lvalue, $ID); }
+  ID { $$ = MAKE_TOKEN(IdLvalue, @$, $1); }
+| lvalue LSBRAC expr RSBRAC { $$ = MAKE_TOKEN(ArrayElemLvalue, @$, $1, $3); }
+| lvalue DOT ID { $$ = MAKE_TOKEN(RecordCompLvalue, @$, $1, $3); }
 ;
 
 comp_values:
