@@ -39,23 +39,6 @@ class Node {
   int depth_ = 0;
 };
 
-template <class T>
-class Terminal : public Node {
- public:
-  explicit Terminal(const yy::location& loc, const T& value)
-      : Node{loc}, value_{value} {}
-
-  void Print(std::ostream& os) const override {
-    PrintBase(os);
-    os << " " << value_ << "\n";
-  }
-  virtual T value() const { return value_; }
-
- protected:
-  const std::string name_ = "terminal";
-  const T value_;
-};
-
 class Nodes : public Node {
  public:
   explicit Nodes(const yy::location& loc) : Node{loc} {}

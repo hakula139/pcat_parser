@@ -10,6 +10,26 @@ void Expr::Print(std::ostream& os) const {
   os << " " << value() << "\n";
 }
 
+void NumberExpr::UpdateDepth(int depth) {
+  Expr::UpdateDepth(depth);
+  if (p_number_) p_number_->UpdateDepth(depth + 1);
+}
+
+std::string NumberExpr::value() const {
+  auto number = p_number_ ? p_number_->value() : "";
+  return number;
+}
+
+void LvalueExpr::UpdateDepth(int depth) {
+  Expr::UpdateDepth(depth);
+  if (p_lvalue_) p_lvalue_->UpdateDepth(depth + 1);
+}
+
+std::string LvalueExpr::value() const {
+  auto lvalue = p_lvalue_ ? p_lvalue_->value() : "";
+  return lvalue;
+}
+
 void ParenExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
   if (p_expr_) p_expr_->UpdateDepth(depth + 1);
@@ -82,7 +102,7 @@ std::string ArrayConstrExpr::value() const {
 void WriteExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
   auto visitor = Overloaded{
-      [](auto&& p) {
+      [depth](auto&& p) {
         if (p) p->UpdateDepth(depth + 1);
       },
   };

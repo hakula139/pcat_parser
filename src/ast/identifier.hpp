@@ -1,14 +1,12 @@
 #ifndef SRC_AST_IDENTIFIER_HPP_
 #define SRC_AST_IDENTIFIER_HPP_
 
-#include <iostream>
 #include <memory>  // std::unique_ptr
 #include <string>
-#include <utility>  // std::move
 #include <vector>
 
 #include "../location.hpp"
-#include "node.hpp"
+#include "expr.hpp"
 
 class Id;
 class Ids;
@@ -16,10 +14,10 @@ class Ids;
 using IdPtr = std::unique_ptr<Id>;
 using IdsPtr = std::unique_ptr<Ids>;
 
-class Id : public Terminal<std::string> {
+class Id : public Expr {
  public:
   explicit Id(const yy::location& loc, const std::string& value)
-      : Terminal{loc, value} {}
+      : Expr{loc, value} {}
 
  protected:
   const std::string name_ = "identifier";

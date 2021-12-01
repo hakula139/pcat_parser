@@ -11,12 +11,15 @@
 #include "../location.hpp"
 #include "constant.hpp"
 #include "identifier.hpp"
+#include "lvalue.hpp"
 #include "node.hpp"
 #include "operator.hpp"
 #include "param.hpp"
 
 class Expr;
 class Exprs;
+class NumberExpr;
+class LvalueExpr;
 class ParenExpr;
 class UnaryExpr;
 class BinaryExpr;
@@ -34,6 +37,8 @@ class ArrayExprs;
 
 using ExprPtr = std::unique_ptr<Expr>;
 using ExprsPtr = std::unique_ptr<Exprs>;
+using NumberExprPtr = std::unique_ptr<NumberExpr>;
+using LvalueExprPtr = std::unique_ptr<LvalueExpr>;
 using ParenExprPtr = std::unique_ptr<ParenExpr>;
 using UnaryExprPtr = std::unique_ptr<UnaryExpr>;
 using BinaryExprPtr = std::unique_ptr<BinaryExpr>;
@@ -51,7 +56,8 @@ using ArrayExprsPtr = std::unique_ptr<ArrayExprs>;
 
 class Expr : public Node {
  public:
-  explicit Expr(const yy::location& loc) : Node{loc} {}
+  explicit Expr(const yy::location& loc, const std::string& value = "")
+      : Node{loc}, value_{value} {}
 
   void Print(std::ostream& os) const override;
   virtual std::string value() const { return value_; }
@@ -68,6 +74,32 @@ class Exprs : public Nodes {
  protected:
   const std::string name_ = "expression list";
   std::vector<ExprPtr> data_;
+};
+
+class NumberExpr : public Expr {
+ public:
+  explicit NumberExpr(const yy::location& loc, NumberPtr p_number)
+      : Expr{loc}, p_number_{std::move(p_number)} {}
+
+  void UpdateDepth(int depth) override;
+  std::string value() const override;
+
+ protected:
+  const std::string name_ = "number expression";
+  NumberPtr p_number_;
+};
+
+class LvalueExpr : public Expr {
+ public:
+  explicit LvalueExpr(const yy::location& loc, LvaluePtr p_lvalue)
+      : Expr{loc}, p_lvalue_{std::move(p_lvalue)} {}
+
+  void UpdateDepth(int depth) override;
+  std::string value() const override;
+
+ protected:
+  const std::string name_ = "lvalue expression";
+  LvaluePtr p_lvalue_;
 };
 
 class ParenExpr : public Expr {
