@@ -6,7 +6,7 @@
 #include "../base/common.hpp"
 
 void Number::UpdateDepth(int depth) {
-  Expr::UpdateDepth(depth);
+  ValueNode::UpdateDepth(depth);
   auto visitor = Overloaded{
       [depth](auto&& p) {
         if (p) p->UpdateDepth(depth + 1);

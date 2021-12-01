@@ -1,19 +1,17 @@
 #ifndef SRC_AST_IDENTIFIER_HPP_
 #define SRC_AST_IDENTIFIER_HPP_
 
-#include <memory>  // std::unique_ptr
 #include <string>
 #include <vector>
 
+#include "../base/common.hpp"
 #include "../location.hpp"
-#include "expr.hpp"
+#include "node.hpp"
 
-class Id : public Expr {
+class Id : public ValueNode {
  public:
-  using Ptr = std::unique_ptr<Id>;
-
   explicit Id(const yy::location& loc, const std::string& value)
-      : Expr{loc, value} {}
+      : ValueNode{loc, value} {}
 
  protected:
   const std::string name_ = "identifier";
@@ -21,13 +19,11 @@ class Id : public Expr {
 
 class Ids : public Nodes {
  public:
-  using Ptr = std::unique_ptr<Ids>;
-
   explicit Ids(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "identifier list";
-  std::vector<Id::Ptr> data_;
+  std::vector<UPtr<Id>> data_;
 };
 
 #endif  // SRC_AST_IDENTIFIER_HPP_

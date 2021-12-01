@@ -7,12 +7,11 @@
 #include <utility>  // std::move
 #include <vector>
 
+#include "../base/common.hpp"
 #include "../location.hpp"
 
 class Node {
  public:
-  using Ptr = std::unique_ptr<Node>;
-
   explicit Node(const yy::location& loc) : loc_{loc} {}
 
   virtual void UpdateDepth(int depth);
@@ -31,21 +30,32 @@ class Node {
   int depth_ = 0;
 };
 
+class ValueNode : public Node {
+ public:
+  explicit ValueNode(const yy::location& loc, const std::string& value = "")
+      : Node{loc}, value_{value} {}
+
+  void Print(std::ostream& os) const override;
+  virtual std::string value() const { return value_; }
+
+ protected:
+  const std::string name_ = "node";
+  const std::string value_;
+};
+
 class Nodes : public Node {
  public:
-  using Ptr = std::unique_ptr<Nodes>;
-
   explicit Nodes(const yy::location& loc) : Node{loc} {}
 
-  void Insert(Node::Ptr node) { data_.push_back(node); }
+  void Insert(UPtr<Node> node) { data_.push_back(node); }
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
-  void operator+=(Node::Ptr node) { Insert(std::move(node)); }
+  void operator+=(UPtr<Node> node) { Insert(std::move(node)); }
 
  protected:
   const std::string name_ = "nodes";
-  std::vector<Node::Ptr> data_;
+  std::vector<UPtr<Node>> data_;
 };
 
 #endif  // SRC_AST_NODE_HPP_

@@ -1,6 +1,9 @@
 #ifndef SRC_BASE_COMMON_HPP_
 #define SRC_BASE_COMMON_HPP_
 
+#include <memory>  // std::unique_ptr
+
+// ANSI colors
 #define RED "\e[0;31m"
 #define GREEN "\e[0;32m"
 #define YELLOW "\e[0;33m"
@@ -17,6 +20,9 @@ enum LogLevel {
   ERROR,
   FATAL,
 };
+
+template <class T>
+using UPtr = typename std::unique_ptr<T>;
 
 // Code snippets for visiting std::variant.
 // See: https://en.cppreference.com/w/cpp/utility/variant/visit

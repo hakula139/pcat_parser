@@ -5,11 +5,6 @@
 
 #include "../base/common.hpp"
 
-void Expr::Print(std::ostream& os) const {
-  PrintBase(os);
-  os << " " << value() << "\n";
-}
-
 void NumberExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
   if (p_number_) p_number_->UpdateDepth(depth + 1);

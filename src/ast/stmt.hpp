@@ -2,11 +2,11 @@
 #define SRC_AST_STMT_HPP_
 
 #include <iostream>
-#include <memory>  // std::unique_ptr
 #include <string>
 #include <utility>  // std::move
 #include <vector>
 
+#include "../base/common.hpp"
 #include "../location.hpp"
 #include "identifier.hpp"
 #include "lvalue.hpp"
@@ -15,8 +15,6 @@
 
 class Stmt : public Node {
  public:
-  using Ptr = std::unique_ptr<Stmt>;
-
   explicit Stmt(const yy::location& loc) : Node{loc} {}
 
  protected:
@@ -25,21 +23,17 @@ class Stmt : public Node {
 
 class Stmts : public Nodes {
  public:
-  using Ptr = std::unique_ptr<Stmts>;
-
   explicit Stmts(const yy::location& loc) : Nodes{loc} {}
 
  protected:
   const std::string name_ = "statement list";
-  std::vector<Stmt::Ptr> data_;
+  std::vector<UPtr<Stmt>> data_;
 };
 
 class AssignStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<AssignStmt>;
-
   explicit AssignStmt(
-      const yy::location& loc, Lvalue::Ptr p_lvalue, Expr::Ptr p_expr)
+      const yy::location& loc, UPtr<Lvalue> p_lvalue, UPtr<Expr> p_expr)
       : Stmt{loc}, p_lvalue_{std::move(p_lvalue)}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;
@@ -47,16 +41,16 @@ class AssignStmt : public Stmt {
 
  protected:
   const std::string name_ = "assignment statement";
-  Lvalue::Ptr p_lvalue_;
-  Expr::Ptr p_expr_;
+  UPtr<Lvalue> p_lvalue_;
+  UPtr<Expr> p_expr_;
 };
 
 class ProcCallStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<ProcCallStmt>;
-
   explicit ProcCallStmt(
-      const yy::location& loc, Id::Ptr p_id, ActualParams::Ptr p_actual_params)
+      const yy::location& loc,
+      UPtr<Id> p_id,
+      UPtr<ActualParams> p_actual_params)
       : Stmt{loc},
         p_id_{std::move(p_id)},
         p_actual_params_{std::move(p_actual_params)} {}
@@ -66,15 +60,13 @@ class ProcCallStmt : public Stmt {
 
  protected:
   const std::string name_ = "procedure call statement";
-  Id::Ptr p_id_;
-  ActualParams::Ptr p_actual_params_;
+  UPtr<Id> p_id_;
+  UPtr<ActualParams> p_actual_params_;
 };
 
 class ReadStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<ReadStmt>;
-
-  explicit ReadStmt(const yy::location& loc, ReadParams::Ptr p_read_params)
+  explicit ReadStmt(const yy::location& loc, UPtr<ReadParams> p_read_params)
       : Stmt{loc}, p_read_params_{std::move(p_read_params)} {}
 
   void UpdateDepth(int depth) override;
@@ -82,14 +74,12 @@ class ReadStmt : public Stmt {
 
  protected:
   const std::string name_ = "read statement";
-  ReadParams::Ptr p_read_params_;
+  UPtr<ReadParams> p_read_params_;
 };
 
 class WriteStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<WriteStmt>;
-
-  explicit WriteStmt(const yy::location& loc, WriteParams::Ptr p_write_params)
+  explicit WriteStmt(const yy::location& loc, UPtr<WriteParams> p_write_params)
       : Stmt{loc}, p_write_params_{std::move(p_write_params)} {}
 
   void UpdateDepth(int depth) override;
@@ -97,19 +87,54 @@ class WriteStmt : public Stmt {
 
  protected:
   const std::string name_ = "write statement";
-  WriteParams::Ptr p_write_params_;
+  UPtr<WriteParams> p_write_params_;
+};
+
+class ElifSection : public Node {
+ public:
+  explicit ElifSection(
+      const yy::location& loc, UPtr<Expr> p_expr, UPtr<Stmts> p_stmts)
+      : Node{loc}, p_expr_{std::move(p_expr)}, p_stmts_{std::move(p_stmts)} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+ protected:
+  const std::string name_ = "else if section";
+  UPtr<Expr> p_expr_;
+  UPtr<Stmts> p_stmts_;
+};
+
+class ElifSections : public Nodes {
+ public:
+  explicit ElifSections(const yy::location& loc) : Nodes{loc} {}
+
+ protected:
+  const std::string name_ = "else if section list";
+  std::vector<UPtr<ElifSection>> data_;
+};
+
+class ElseSection : public Node {
+ public:
+  explicit ElseSection(const yy::location& loc, UPtr<Stmts> p_stmts)
+      : Node{loc}, p_stmts_{std::move(p_stmts)} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+ protected:
+  const std::string name_ = "else section";
+  UPtr<Stmts> p_stmts_;
 };
 
 class IfStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<IfStmt>;
-
   explicit IfStmt(
       const yy::location& loc,
-      Expr::Ptr p_expr,
-      Stmts::Ptr p_stmts,
-      ElifSections::Ptr p_elif_sections,
-      ElseSection::Ptr p_else_section)
+      UPtr<Expr> p_expr,
+      UPtr<Stmts> p_stmts,
+      UPtr<ElifSections> p_elif_sections,
+      UPtr<ElseSection> p_else_section)
       : Stmt{loc},
         p_expr_{std::move(p_expr)},
         p_stmts_{std::move(p_stmts)},
@@ -121,61 +146,16 @@ class IfStmt : public Stmt {
 
  protected:
   const std::string name_ = "if statement";
-  Expr::Ptr p_expr_;
-  Stmts::Ptr p_stmts_;
-  ElifSections::Ptr p_elif_sections_;
-  ElseSection::Ptr p_else_section_;
-};
-
-class ElifSection : public Node {
- public:
-  using Ptr = std::unique_ptr<ElifSection>;
-
-  explicit ElifSection(
-      const yy::location& loc, Expr::Ptr p_expr, Stmts::Ptr p_stmts)
-      : Node{loc}, p_expr_{std::move(p_expr)}, p_stmts_{std::move(p_stmts)} {}
-
-  void UpdateDepth(int depth) override;
-  void Print(std::ostream& os) const override;
-
- protected:
-  const std::string name_ = "else if section";
-  Expr::Ptr p_expr_;
-  Stmts::Ptr p_stmts_;
-};
-
-class ElifSections : public Nodes {
- public:
-  using Ptr = std::unique_ptr<ElifSections>;
-
-  explicit ElifSections(const yy::location& loc) : Nodes{loc} {}
-
- protected:
-  const std::string name_ = "else if section list";
-  std::vector<ElifSection::Ptr> data_;
-};
-
-class ElseSection : public Node {
- public:
-  using Ptr = std::unique_ptr<ElseSection>;
-
-  explicit ElseSection(const yy::location& loc, Stmts::Ptr p_stmts)
-      : Node{loc}, p_stmts_{std::move(p_stmts)} {}
-
-  void UpdateDepth(int depth) override;
-  void Print(std::ostream& os) const override;
-
- protected:
-  const std::string name_ = "else section";
-  Stmts::Ptr p_stmts_;
+  UPtr<Expr> p_expr_;
+  UPtr<Stmts> p_stmts_;
+  UPtr<ElifSections> p_elif_sections_;
+  UPtr<ElseSection> p_else_section_;
 };
 
 class WhileStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<WhileStmt>;
-
   explicit WhileStmt(
-      const yy::location& loc, Expr::Ptr p_expr, Stmts::Ptr p_stmts)
+      const yy::location& loc, UPtr<Expr> p_expr, UPtr<Stmts> p_stmts)
       : Stmt{loc}, p_expr_{std::move(p_expr)}, p_stmts_{std::move(p_stmts)} {}
 
   void UpdateDepth(int depth) override;
@@ -183,15 +163,13 @@ class WhileStmt : public Stmt {
 
  protected:
   const std::string name_ = "while statement";
-  Expr::Ptr p_expr_;
-  Stmts::Ptr p_stmts_;
+  UPtr<Expr> p_expr_;
+  UPtr<Stmts> p_stmts_;
 };
 
 class LoopStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<LoopStmt>;
-
-  explicit LoopStmt(const yy::location& loc, Stmts::Ptr p_stmts)
+  explicit LoopStmt(const yy::location& loc, UPtr<Stmts> p_stmts)
       : Stmt{loc}, p_stmts_{std::move(p_stmts)} {}
 
   void UpdateDepth(int depth) override;
@@ -199,20 +177,31 @@ class LoopStmt : public Stmt {
 
  protected:
   const std::string name_ = "loop statement";
-  Stmts::Ptr p_stmts_;
+  UPtr<Stmts> p_stmts_;
+};
+
+class ForStep : public Node {
+ public:
+  explicit ForStep(const yy::location& loc, UPtr<Expr> p_expr)
+      : Node{loc}, p_expr_{std::move(p_expr)} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+ protected:
+  const std::string name_ = "for step";
+  UPtr<Expr> p_expr_;
 };
 
 class ForStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<ForStmt>;
-
   explicit ForStmt(
       const yy::location& loc,
-      Id::Ptr p_id,
-      Expr::Ptr p_begin,
-      Expr::Ptr p_end,
-      ForStep::Ptr p_step,
-      Stmts::Ptr p_stmts)
+      UPtr<Id> p_id,
+      UPtr<Expr> p_begin,
+      UPtr<Expr> p_end,
+      UPtr<ForStep> p_step,
+      UPtr<Stmts> p_stmts)
       : Stmt{loc},
         p_id_{std::move(p_id)},
         p_begin_{std::move(p_begin)},
@@ -225,32 +214,15 @@ class ForStmt : public Stmt {
 
  protected:
   const std::string name_ = "for statement";
-  Id::Ptr p_id_;
-  Expr::Ptr p_begin_;
-  Expr::Ptr p_end_;
-  ForStep::Ptr p_step_;
-  Stmts::Ptr p_stmts_;
-};
-
-class ForStep : public Node {
- public:
-  using Ptr = std::unique_ptr<ForStep>;
-
-  explicit ForStep(const yy::location& loc, Expr::Ptr p_expr)
-      : Node{loc}, p_expr_{std::move(p_expr)} {}
-
-  void UpdateDepth(int depth) override;
-  void Print(std::ostream& os) const override;
-
- protected:
-  const std::string name_ = "for step";
-  Expr::Ptr p_expr_;
+  UPtr<Id> p_id_;
+  UPtr<Expr> p_begin_;
+  UPtr<Expr> p_end_;
+  UPtr<ForStep> p_step_;
+  UPtr<Stmts> p_stmts_;
 };
 
 class ExitStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<ExitStmt>;
-
   explicit ExitStmt(const yy::location& loc) : Stmt{loc} {}
 
  protected:
@@ -259,9 +231,7 @@ class ExitStmt : public Stmt {
 
 class ReturnStmt : public Stmt {
  public:
-  using Ptr = std::unique_ptr<ReturnStmt>;
-
-  explicit ReturnStmt(const yy::location& loc, Expr::Ptr p_expr)
+  explicit ReturnStmt(const yy::location& loc, UPtr<Expr> p_expr)
       : Stmt{loc}, p_expr_{std::move(p_expr)} {}
 
   void UpdateDepth(int depth) override;
@@ -269,7 +239,7 @@ class ReturnStmt : public Stmt {
 
  protected:
   const std::string name_ = "return statement";
-  Expr::Ptr p_expr_;
+  UPtr<Expr> p_expr_;
 };
 
 #endif  // SRC_AST_STMT_HPP_

@@ -22,6 +22,11 @@ void Node::PrintBase(std::ostream& os) const {
   PrintLocation(os);
 }
 
+void ValueNode::Print(std::ostream& os) const {
+  PrintBase(os);
+  os << " " << value() << "\n";
+}
+
 void Nodes::UpdateDepth(int depth) {
   Node::UpdateDepth(depth);
   for (auto&& p_node : data_) {

@@ -2,20 +2,17 @@
 #define SRC_AST_CONSTANT_HPP_
 
 #include <iostream>
-#include <memory>  // std::unique_ptr
 #include <string>
 #include <utility>  // std::move
 #include <variant>  // std::variant
 
+#include "../base/common.hpp"
 #include "../location.hpp"
-#include "expr.hpp"
 #include "node.hpp"
 
 template <class T>
 class Constant : public Node {
  public:
-  using Ptr = std::unique_ptr<Constant>;
-
   explicit Constant(const yy::location& loc, const T& value)
       : Node{loc}, value_{value} {}
 
@@ -32,8 +29,6 @@ class Constant : public Node {
 
 class Integer : public Constant<int32_t> {
  public:
-  using Ptr = std::unique_ptr<Integer>;
-
   explicit Integer(const yy::location& loc, int32_t value)
       : Constant{loc, value} {}
 
@@ -43,21 +38,18 @@ class Integer : public Constant<int32_t> {
 
 class Real : public Constant<double> {
  public:
-  using Ptr = std::unique_ptr<Real>;
-
   explicit Real(const yy::location& loc, double value) : Constant{loc, value} {}
 
  protected:
   const std::string name_ = "real";
 };
 
-class Number : public Expr {
+class Number : public ValueNode {
  public:
-  using Ptr = std::unique_ptr<Number>;
-  using UnionPtr = std::variant<Integer::Ptr, Real::Ptr>;
+  using UnionPtr = std::variant<UPtr<Integer>, UPtr<Real>>;
 
   explicit Number(const yy::location& loc, UnionPtr p_number)
-      : Expr{loc}, p_number_{std::move(p_number)} {}
+      : ValueNode{loc}, p_number_{std::move(p_number)} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
@@ -69,8 +61,6 @@ class Number : public Expr {
 
 class String : public Constant<std::string> {
  public:
-  using Ptr = std::unique_ptr<String>;
-
   explicit String(const yy::location& loc, const std::string& value)
       : Constant{loc, value} {}
 

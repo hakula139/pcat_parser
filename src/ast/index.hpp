@@ -6,6 +6,7 @@
 #include "decl.hpp"
 #include "expr.hpp"
 #include "identifier.hpp"
+#include "lvalue.hpp"
 #include "node.hpp"
 #include "operator.hpp"
 #include "param.hpp"
