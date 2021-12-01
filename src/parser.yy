@@ -16,12 +16,13 @@
 %define parse.lac full
 
 %lex-param {yy::Lexer* p_lexer}
-%parse-param {yy::Lexer* p_lexer}
+%parse-param {yy::Lexer* p_lexer} {Driver* p_driver}
 
 %code requires {
 #include <string>
 
 #include "ast/index.hpp"
+#include "base/common.hpp"
 
 class Driver;
 namespace yy {
@@ -30,6 +31,9 @@ namespace yy {
 }
 
 %code top {
+#include <memory>   // std::make_unique
+#include <utility>  // std::move
+
 #include "driver.hpp"
 #include "lexer.hpp"
 #include "utils/logger.hpp"
@@ -110,12 +114,61 @@ int yyFlexLexer::yylex() {
   BACKSLASH           "\\"
 
   // Constants
-  <int32_t>           INTEGER             "integer"
-  <double>            REAL                "real"
-  <std::string>       STRING              "string"
+  <UPtr<Integer>>     INTEGER             "integer"
+  <UPtr<Real>>        REAL                "real"
+  <UPtr<String>>      STRING              "string"
 
   // Identifiers
-  <std::string>       ID                  "identifier"
+  <UPtr<Id>>          ID                  "identifier"
+;
+
+%nterm
+  // Programs
+  <UPtr<Program>>             program
+  <UPtr<Body>>                body
+
+  // Declarations
+  <UPtr<Decls>>               decls
+  <UPtr<Decl>>                decl
+  <UPtr<VarDecls>>            var_decls
+  <UPtr<VarDecl>>             var_decl
+  <UPtr<TypeDecls>>           type_decls
+  <UPtr<TypeDecl>>            type_decl
+  <UPtr<ProcDecls>>           proc_decls
+  <UPtr<ProcDecl>>            proc_decl
+  <UPtr<FormalParams>>        formal_params
+  <UPtr<FormalParam>>         formal_param
+  <UPtr<TypeAnnot>>           type_annot
+  <UPtr<Type>>                type
+  <UPtr<Components>>          components
+  <UPtr<Component>>           component
+  <UPtr<Ids>>                 ids
+
+  // Statements
+  <UPtr<Stmts>>               stmts
+  <UPtr<Stmt>>                stmt
+  <UPtr<ActualParams>>        actual_params
+  <UPtr<ReadParams>>          read_params
+  <UPtr<WriteParams>>         write_params
+  <UPtr<ElifSections>>        elif_sections
+  <UPtr<ElifSection>>         elif_section
+  <UPtr<ElseSection>>         else_section
+  <UPtr<ForStep>>             for_step
+
+  // Expressions
+  <UPtr<Exprs>>               exprs
+  <UPtr<Expr>>                expr
+  <UPtr<WriteExprs>>          write_exprs
+  <UPtr<WriteExpr>>           write_expr
+  <UPtr<AssignExprs>>         assign_exprs
+  <UPtr<AssignExpr>>          assign_expr
+  <UPtr<ArrayExprs>>          array_exprs
+  <UPtr<ArrayExpr>>           array_expr
+  <UPtr<Number>>              number
+  <UPtr<Lvalues>>             lvalues
+  <UPtr<Lvalue>>              lvalue
+  <UPtr<CompValues>>          comp_values
+  <UPtr<ArrayValues>>         array_values
 ;
 
 %left                 OR;
@@ -126,15 +179,16 @@ int yyFlexLexer::yylex() {
 %left                 STAR SLASH DIV MOD;
 %right                POS NEG NOT;
 
-%printer { yyo << $$; } <*>;
-
 %%
 %start program;
 
 // Programs
 
 program:
-  PROGRAM IS body SEMICOLON { Logger::Debug("program"); }
+  PROGRAM IS body SEMICOLON {
+    $$ = std::make_unique<Program>(@$, std::move($body));
+    p_driver->set_program(std::move($$));
+  }
 ;
 
 body:
