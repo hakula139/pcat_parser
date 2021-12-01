@@ -8,7 +8,6 @@
 
 #include "../base/common.hpp"
 #include "../location.hpp"
-#include "expr.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
 
@@ -41,6 +40,8 @@ class IdLvalue : public Lvalue {
   const std::string name_ = "identifier lvalue";
   UPtr<Id> p_id_;
 };
+
+class Expr;
 
 class ArrayElemLvalue : public Lvalue {
  public:

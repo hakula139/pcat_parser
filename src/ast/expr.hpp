@@ -14,7 +14,6 @@
 #include "lvalue.hpp"
 #include "node.hpp"
 #include "operator.hpp"
-#include "param.hpp"
 
 class Expr : public ValueNode {
  public:
@@ -109,6 +108,8 @@ class BinaryExpr : public Expr {
   UPtr<Expr> p_expr2_;
 };
 
+class ActualParams;
+
 class ProcCallExpr : public Expr {
  public:
   explicit ProcCallExpr(
@@ -126,6 +127,29 @@ class ProcCallExpr : public Expr {
   const std::string name_ = "procedure call expression";
   UPtr<Id> p_id_;
   UPtr<ActualParams> p_actual_params_;
+};
+
+class AssignExpr : public Expr {
+ public:
+  explicit AssignExpr(const yy::location& loc, UPtr<Id> p_id, UPtr<Expr> p_expr)
+      : Expr{loc}, p_id_{std::move(p_id)}, p_expr_{std::move(p_expr)} {}
+
+  void UpdateDepth(int depth) override;
+  std::string value() const override;
+
+ protected:
+  const std::string name_ = "assign expression";
+  UPtr<Id> p_id_;
+  UPtr<Expr> p_expr_;
+};
+
+class AssignExprs : public Nodes {
+ public:
+  explicit AssignExprs(const yy::location& loc) : Nodes{loc} {}
+
+ protected:
+  const std::string name_ = "assign expression list";
+  std::vector<UPtr<AssignExpr>> data_;
 };
 
 class CompValues : public AssignExprs {
@@ -151,6 +175,30 @@ class RecordConstrExpr : public Expr {
   const std::string name_ = "record construction expression";
   UPtr<Id> p_id_;
   UPtr<CompValues> p_comp_values_;
+};
+
+class ArrayExpr : public Expr {
+ public:
+  explicit ArrayExpr(
+      const yy::location& loc, UPtr<Expr> p_value, UPtr<Expr> p_num = nullptr)
+      : Expr{loc}, p_value_{std::move(p_value)}, p_num_{std::move(p_num)} {}
+
+  void UpdateDepth(int depth) override;
+  std::string value() const override;
+
+ protected:
+  const std::string name_ = "array expression";
+  UPtr<Expr> p_value_;
+  UPtr<Expr> p_num_;
+};
+
+class ArrayExprs : public Nodes {
+ public:
+  explicit ArrayExprs(const yy::location& loc) : Nodes{loc} {}
+
+ protected:
+  const std::string name_ = "array expression list";
+  std::vector<UPtr<ArrayExpr>> data_;
 };
 
 class ArrayValues : public ArrayExprs {
@@ -200,53 +248,6 @@ class WriteExprs : public Nodes {
  protected:
   const std::string name_ = "write expression list";
   std::vector<UPtr<WriteExpr>> data_;
-};
-
-class AssignExpr : public Expr {
- public:
-  explicit AssignExpr(const yy::location& loc, UPtr<Id> p_id, UPtr<Expr> p_expr)
-      : Expr{loc}, p_id_{std::move(p_id)}, p_expr_{std::move(p_expr)} {}
-
-  void UpdateDepth(int depth) override;
-  std::string value() const override;
-
- protected:
-  const std::string name_ = "assign expression";
-  UPtr<Id> p_id_;
-  UPtr<Expr> p_expr_;
-};
-
-class AssignExprs : public Nodes {
- public:
-  explicit AssignExprs(const yy::location& loc) : Nodes{loc} {}
-
- protected:
-  const std::string name_ = "assign expression list";
-  std::vector<UPtr<AssignExpr>> data_;
-};
-
-class ArrayExpr : public Expr {
- public:
-  explicit ArrayExpr(
-      const yy::location& loc, UPtr<Expr> p_value, UPtr<Expr> p_num = nullptr)
-      : Expr{loc}, p_value_{std::move(p_value)}, p_num_{std::move(p_num)} {}
-
-  void UpdateDepth(int depth) override;
-  std::string value() const override;
-
- protected:
-  const std::string name_ = "array expression";
-  UPtr<Expr> p_value_;
-  UPtr<Expr> p_num_;
-};
-
-class ArrayExprs : public Nodes {
- public:
-  explicit ArrayExprs(const yy::location& loc) : Nodes{loc} {}
-
- protected:
-  const std::string name_ = "array expression list";
-  std::vector<UPtr<ArrayExpr>> data_;
 };
 
 #endif  // SRC_AST_EXPR_HPP_

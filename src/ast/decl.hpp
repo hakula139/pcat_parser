@@ -85,6 +85,8 @@ class TypeDecls : public Decls {
   std::vector<UPtr<TypeDecl>> data_;
 };
 
+class Body;
+
 class ProcDecl : public Decl {
  public:
   explicit ProcDecl(

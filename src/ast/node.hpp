@@ -2,7 +2,6 @@
 #define SRC_AST_NODE_HPP_
 
 #include <iostream>
-#include <memory>  // std::unique_ptr
 #include <string>
 #include <utility>  // std::move
 #include <vector>
