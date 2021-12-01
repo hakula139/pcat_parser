@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "body.hpp"
+
 void VarDecl::UpdateDepth(int depth) {
   Decl::UpdateDepth(depth);
   if (p_ids_) p_ids_->UpdateDepth(depth + 1);

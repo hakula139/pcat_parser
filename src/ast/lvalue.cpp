@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 
+#include "expr.hpp"
+#include "param.hpp"
+
 void IdLvalue::UpdateDepth(int depth) {
   Lvalue::UpdateDepth(depth);
   if (p_id_) p_id_->UpdateDepth(depth + 1);

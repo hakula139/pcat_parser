@@ -68,10 +68,10 @@ void ElifSection::UpdateDepth(int depth) {
   if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
 }
 
-void ElifSection::UpdateDepth(int depth) {
-  Node::UpdateDepth(depth);
-  if (p_expr_) p_expr_->UpdateDepth(depth + 1);
-  if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
+void ElifSection::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_expr_) p_expr_->Print(os);
+  if (p_stmts_) p_stmts_->Print(os);
 }
 
 void ElseSection::UpdateDepth(int depth) {
@@ -79,9 +79,9 @@ void ElseSection::UpdateDepth(int depth) {
   if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
 }
 
-void ElseSection::UpdateDepth(int depth) {
-  Node::UpdateDepth(depth);
-  if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
+void ElseSection::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_stmts_) p_stmts_->Print(os);
 }
 
 void WhileStmt::Print(std::ostream& os) const {
@@ -123,9 +123,9 @@ void ForStep::UpdateDepth(int depth) {
   if (p_expr_) p_expr_->UpdateDepth(depth + 1);
 }
 
-void ForStep::UpdateDepth(int depth) {
-  Node::UpdateDepth(depth);
-  if (p_expr_) p_expr_->UpdateDepth(depth + 1);
+void ForStep::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_expr_) p_expr_->Print(os);
 }
 
 void ReturnStmt::UpdateDepth(int depth) {

@@ -46,7 +46,7 @@ class Nodes : public Node {
  public:
   explicit Nodes(const yy::location& loc) : Node{loc} {}
 
-  void Insert(UPtr<Node> node) { data_.push_back(node); }
+  void Insert(UPtr<Node> node) { data_.push_back(std::move(node)); }
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 

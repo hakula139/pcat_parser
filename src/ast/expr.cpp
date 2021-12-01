@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../base/common.hpp"
+#include "param.hpp"
 
 void NumberExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);

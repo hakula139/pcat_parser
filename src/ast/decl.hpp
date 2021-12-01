@@ -8,7 +8,6 @@
 
 #include "../base/common.hpp"
 #include "../location.hpp"
-#include "body.hpp"
 #include "identifier.hpp"
 #include "node.hpp"
 #include "param.hpp"
