@@ -41,7 +41,7 @@ class IdLvalue : public Lvalue {
   std::string name() const override { return name_; }
 
  private:
-  const std::string name_ = "identifier lvalue";
+  const std::string name_ = "lvalue";
   SPtr<Id> p_id_;
 };
 
@@ -59,7 +59,7 @@ class ArrayElemLvalue : public Lvalue {
   std::string name() const override { return name_; }
 
  private:
-  const std::string name_ = "array element lvalue";
+  const std::string name_ = "lvalue";
   SPtr<Lvalue> p_lvalue_;
   SPtr<Expr> p_expr_;
 };
@@ -76,7 +76,7 @@ class RecordCompLvalue : public Lvalue {
   std::string name() const override { return name_; }
 
  private:
-  const std::string name_ = "record component lvalue";
+  const std::string name_ = "lvalue";
   SPtr<Lvalue> p_lvalue_;
   SPtr<Id> p_id_;
 };
