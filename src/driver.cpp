@@ -17,5 +17,6 @@ int Driver::Parse(const std::string& in_path, const std::string& out_path) {
   auto p_ofs = std::make_unique<std::ofstream>(out_path);
   lexer_.switch_streams(*p_ifs, *p_ofs);
   int res = parser_();
+  if (p_program_) p_program_->Print(*p_ofs);
   return res;
 }

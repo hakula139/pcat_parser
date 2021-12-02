@@ -12,7 +12,7 @@ class Op : public ValueNode {
   explicit Op(const yy::location& loc, const std::string& value)
       : ValueNode{loc, value} {}
 
- protected:
+ private:
   const std::string name_ = "operator";
 };
 

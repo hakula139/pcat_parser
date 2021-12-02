@@ -38,7 +38,7 @@ class Logger {
       const yy::location* p_loc = nullptr,
       std::ostream& os = std::cout);
 
- protected:
+ private:
   static void Log(
       const std::string& msg,
       const yy::location* p_loc = nullptr,

@@ -19,7 +19,7 @@ class Body : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "body";
   SPtr<Decls> p_decls_;
   SPtr<Stmts> p_stmts_;

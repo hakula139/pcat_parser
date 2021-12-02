@@ -13,7 +13,7 @@ class Type : public Node {
  public:
   explicit Type(const yy::location& loc) : Node{loc} {}
 
- protected:
+ private:
   const std::string name_ = "type";
 };
 
@@ -25,7 +25,7 @@ class TypeAnnot : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "type annotation";
   SPtr<Type> p_type_;
 };
@@ -38,7 +38,7 @@ class Component : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "component";
   SPtr<Id> p_id_;
   SPtr<Type> p_type_;
@@ -48,7 +48,7 @@ class Components : public Nodes {
  public:
   explicit Components(const yy::location& loc) : Nodes{loc} {}
 
- protected:
+ private:
   const std::string name_ = "component list";
 };
 
@@ -60,7 +60,7 @@ class IdType : public Type {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "identifier type";
   SPtr<Id> p_id_;
 };
@@ -73,7 +73,7 @@ class ArrayType : public Type {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "array type";
   SPtr<Type> p_type_;
 };
@@ -86,7 +86,7 @@ class RecordType : public Type {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "record type";
   SPtr<Components> p_components_;
 };

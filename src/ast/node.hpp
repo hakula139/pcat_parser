@@ -24,6 +24,7 @@ class Node {
   void PrintLocation(std::ostream& os) const;
   void PrintBase(std::ostream& os) const;
 
+ private:
   const std::string name_ = "node";
   yy::location loc_;
   int depth_ = 0;
@@ -37,7 +38,7 @@ class ValueNode : public Node {
   void Print(std::ostream& os) const override;
   virtual std::string value() const { return value_; }
 
- protected:
+ private:
   const std::string name_ = "node";
   const std::string value_;
 };
@@ -51,7 +52,7 @@ class Nodes : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
- protected:
+ private:
   const std::string name_ = "nodes";
   std::vector<SPtr<Node>> data_;
 };

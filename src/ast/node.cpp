@@ -28,7 +28,7 @@ void ValueNode::Print(std::ostream& os) const {
 }
 
 void Nodes::Insert(SPtr<Node> p_node) {
-  loc_ += p_node->loc();
+  set_loc(loc() + p_node->loc());
   data_.push_back(p_node);
 }
 

@@ -21,7 +21,7 @@ class Lexer : public yyFlexLexer {
 
   virtual Parser::symbol_type ReadToken();
 
- protected:
+ private:
   Driver& drv_;
 };
 }  // namespace yy

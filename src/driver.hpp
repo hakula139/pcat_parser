@@ -18,7 +18,7 @@ class Driver {
   yy::Parser::location_type& loc() { return loc_; }
   void set_program(SPtr<Program> p_program) { p_program_ = p_program; }
 
- protected:
+ private:
   yy::Lexer lexer_;
   yy::Parser parser_;
 

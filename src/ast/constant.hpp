@@ -21,7 +21,7 @@ class Constant : public Node {
   }
   virtual T value() const { return value_; }
 
- protected:
+ private:
   const std::string name_ = "constant";
   const T value_;
 };
@@ -31,7 +31,7 @@ class Integer : public Constant<int32_t> {
   explicit Integer(const yy::location& loc, int32_t value)
       : Constant{loc, value} {}
 
- protected:
+ private:
   const std::string name_ = "integer";
 };
 
@@ -39,7 +39,7 @@ class Real : public Constant<double> {
  public:
   explicit Real(const yy::location& loc, double value) : Constant{loc, value} {}
 
- protected:
+ private:
   const std::string name_ = "real";
 };
 
@@ -53,7 +53,7 @@ class Number : public ValueNode {
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
- protected:
+ private:
   const std::string name_ = "number";
   UnionPtr p_number_;
 };
@@ -63,7 +63,7 @@ class String : public Constant<std::string> {
   explicit String(const yy::location& loc, const std::string& value)
       : Constant{loc, value} {}
 
- protected:
+ private:
   const std::string name_ = "string";
 };
 
