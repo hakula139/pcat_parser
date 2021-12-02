@@ -2,7 +2,6 @@
 #define SRC_DRIVER_HPP_
 
 #include <string>
-#include <utility>  // std::move
 
 #include "ast/program.hpp"
 #include "base/common.hpp"
@@ -17,16 +16,14 @@ class Driver {
   int Parse(const std::string& in_path, const std::string& out_path);
 
   yy::Parser::location_type& loc() { return loc_; }
-  void set_program(UPtr<Program> p_program) {
-    p_program_ = std::move(p_program);
-  }
+  void set_program(SPtr<Program> p_program) { p_program_ = p_program; }
 
  protected:
   yy::Lexer lexer_;
   yy::Parser parser_;
 
   yy::Parser::location_type loc_;
-  UPtr<Program> p_program_;
+  SPtr<Program> p_program_;
 
   bool trace_parsing_ = LOG_LEVEL <= TRACE;
   bool trace_scanning_ = LOG_LEVEL <= TRACE;

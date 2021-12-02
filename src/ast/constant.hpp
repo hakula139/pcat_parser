@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 #include <variant>  // std::variant
 
 #include "../base/common.hpp"
@@ -46,10 +45,10 @@ class Real : public Constant<double> {
 
 class Number : public ValueNode {
  public:
-  using UnionPtr = std::variant<UPtr<Integer>, UPtr<Real>>;
+  using UnionPtr = std::variant<SPtr<Integer>, SPtr<Real>>;
 
   explicit Number(const yy::location& loc, UnionPtr p_number)
-      : ValueNode{loc}, p_number_{std::move(p_number)} {}
+      : ValueNode{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;

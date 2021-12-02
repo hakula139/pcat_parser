@@ -1,7 +1,7 @@
 #ifndef SRC_BASE_COMMON_HPP_
 #define SRC_BASE_COMMON_HPP_
 
-#include <memory>  // std::unique_ptr
+#include <memory>  // std::shared_ptr
 
 // ANSI colors
 #define RED "\e[0;31m"
@@ -22,7 +22,7 @@ enum LogLevel {
 };
 
 template <class T>
-using UPtr = typename std::unique_ptr<T>;
+using SPtr = typename std::shared_ptr<T>;
 
 // Code snippets for visiting std::variant.
 // See: https://en.cppreference.com/w/cpp/utility/variant/visit

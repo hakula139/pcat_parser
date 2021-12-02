@@ -73,6 +73,16 @@ std::string ProcCallExpr::value() const {
   return id + "()";
 }
 
+void CompValues::UpdateDepth(int depth) {
+  Node::UpdateDepth(depth);
+  if (p_assign_exprs_) p_assign_exprs_->UpdateDepth(depth + 1);
+}
+
+void CompValues::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_assign_exprs_) p_assign_exprs_->Print(os);
+}
+
 void RecordConstrExpr::UpdateDepth(int depth) {
   Expr::UpdateDepth(depth);
   if (p_id_) p_id_->UpdateDepth(depth + 1);
@@ -82,6 +92,16 @@ void RecordConstrExpr::UpdateDepth(int depth) {
 std::string RecordConstrExpr::value() const {
   auto id = p_id_ ? p_id_->value() : "";
   return id + "{}";
+}
+
+void ArrayValues::UpdateDepth(int depth) {
+  Node::UpdateDepth(depth);
+  if (p_array_exprs_) p_array_exprs_->UpdateDepth(depth + 1);
+}
+
+void ArrayValues::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_array_exprs_) p_array_exprs_->Print(os);
 }
 
 void ArrayConstrExpr::UpdateDepth(int depth) {

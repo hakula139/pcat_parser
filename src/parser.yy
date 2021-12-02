@@ -31,20 +31,17 @@ namespace yy {
 }
 
 %code top {
-#include <memory>   // std::make_unique
-#include <utility>  // std::move
+#include <memory>   // std::make_shared
 
 #include "driver.hpp"
 #include "lexer.hpp"
 #include "utils/logger.hpp"
 
-// Some abbreviations.
-#define MOVE()
-#define MOVE(x) std::move(x)
-#define MOVE(x, ...) std::move(x), MOVE(__VA_ARGS__)
-#define MAKE_TOKEN(T, loc, ...) std::make_unique<T>(loc, MOVE(__VA_ARGS__))
+using std::make_shared;
+using location_type = yy::Parser::location_type;
+using symbol_type = yy::Parser::symbol_type;
 
-static yy::Parser::symbol_type yylex(yy::Lexer* p_lexer) {
+static symbol_type yylex(yy::Lexer* p_lexer) {
   return p_lexer->ReadToken();
 }
 
@@ -120,12 +117,12 @@ int yyFlexLexer::yylex() {
   <std::string>       BACKSLASH           "\\"
 
   // Constants
-  <UPtr<Integer>>     INTEGER             "integer"
-  <UPtr<Real>>        REAL                "real"
-  <UPtr<String>>      STRING              "string"
+  <int32_t>           INTEGER             "integer"
+  <double>            REAL                "real"
+  <std::string>       STRING              "string"
 
   // Identifiers
-  <UPtr<Id>>          ID                  "identifier"
+  <std::string>       ID                  "identifier"
 ;
 
 %left                 OR;
@@ -138,51 +135,53 @@ int yyFlexLexer::yylex() {
 
 %nterm
   // Programs
-  <UPtr<Program>>             program
-  <UPtr<Body>>                body
+  <SPtr<Program>>             program
+  <SPtr<Body>>                body
 
   // Declarations
-  <UPtr<Decls>>               decls
-  <UPtr<Decl>>                decl
-  <UPtr<VarDecls>>            var_decls
-  <UPtr<VarDecl>>             var_decl
-  <UPtr<TypeDecls>>           type_decls
-  <UPtr<TypeDecl>>            type_decl
-  <UPtr<ProcDecls>>           proc_decls
-  <UPtr<ProcDecl>>            proc_decl
-  <UPtr<FormalParams>>        formal_params
-  <UPtr<FormalParam>>         formal_param
-  <UPtr<TypeAnnot>>           type_annot
-  <UPtr<Type>>                type
-  <UPtr<Components>>          components
-  <UPtr<Component>>           component
-  <UPtr<Ids>>                 ids
+  <SPtr<Decls>>               decls
+  <SPtr<Decl>>                decl
+  <SPtr<VarDecls>>            var_decls
+  <SPtr<VarDecl>>             var_decl
+  <SPtr<TypeDecls>>           type_decls
+  <SPtr<TypeDecl>>            type_decl
+  <SPtr<ProcDecls>>           proc_decls
+  <SPtr<ProcDecl>>            proc_decl
+  <SPtr<FormalParams>>        formal_params
+  <SPtr<FormalParam>>         formal_param
+  <SPtr<TypeAnnot>>           type_annot
+  <SPtr<Type>>                type
+  <SPtr<Components>>          components
+  <SPtr<Component>>           component
+  <SPtr<Ids>>                 ids
+  <SPtr<Id>>                  id
 
   // Statements
-  <UPtr<Stmts>>               stmts
-  <UPtr<Stmt>>                stmt
-  <UPtr<ActualParams>>        actual_params
-  <UPtr<ReadParams>>          read_params
-  <UPtr<WriteParams>>         write_params
-  <UPtr<ElifSections>>        elif_sections
-  <UPtr<ElifSection>>         elif_section
-  <UPtr<ElseSection>>         else_section
-  <UPtr<ForStep>>             for_step
+  <SPtr<Stmts>>               stmts
+  <SPtr<Stmt>>                stmt
+  <SPtr<ActualParams>>        actual_params
+  <SPtr<ReadParams>>          read_params
+  <SPtr<WriteParams>>         write_params
+  <SPtr<ElifSections>>        elif_sections
+  <SPtr<ElifSection>>         elif_section
+  <SPtr<ElseSection>>         else_section
+  <SPtr<ForStep>>             for_step
 
   // Expressions
-  <UPtr<Exprs>>               exprs
-  <UPtr<Expr>>                expr
-  <UPtr<WriteExprs>>          write_exprs
-  <UPtr<WriteExpr>>           write_expr
-  <UPtr<AssignExprs>>         assign_exprs
-  <UPtr<AssignExpr>>          assign_expr
-  <UPtr<ArrayExprs>>          array_exprs
-  <UPtr<ArrayExpr>>           array_expr
-  <UPtr<Number>>              number
-  <UPtr<Lvalues>>             lvalues
-  <UPtr<Lvalue>>              lvalue
-  <UPtr<CompValues>>          comp_values
-  <UPtr<ArrayValues>>         array_values
+  <SPtr<Exprs>>               exprs
+  <SPtr<Expr>>                expr
+  <SPtr<WriteExprs>>          write_exprs
+  <SPtr<WriteExpr>>           write_expr
+  <SPtr<AssignExprs>>         assign_exprs
+  <SPtr<AssignExpr>>          assign_expr
+  <SPtr<ArrayExprs>>          array_exprs
+  <SPtr<ArrayExpr>>           array_expr
+  <SPtr<Number>>              number
+  <SPtr<String>>              string
+  <SPtr<Lvalues>>             lvalues
+  <SPtr<Lvalue>>              lvalue
+  <SPtr<CompValues>>          comp_values
+  <SPtr<ArrayValues>>         array_values
 ;
 
 %%
@@ -192,254 +191,262 @@ int yyFlexLexer::yylex() {
 
 program:
   PROGRAM IS body SEMICOLON {
-    $$ = MAKE_TOKEN(Program, @$, $body);
-    p_driver->set_program(MOVE($$));
+    $$ = make_shared<Program>(@$, $body);
+    p_driver->set_program($$);
   }
 ;
 
 body:
-  decls BEGIN stmts END { $$ = MAKE_TOKEN(Body, @$, $decls, $stmts); }
+  decls BEGIN stmts END { $$ = make_shared<Body>(@$, $decls, $stmts); }
 ;
 
 // Declarations
 
 decls:
-  %empty { $$ = MAKE_TOKEN(Decls, @$); }
-| decls decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  %empty { $$ = make_shared<Decls>(@$); }
+| decls decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 decl:
-  VAR var_decls { $$ = MOVE($2); $$->set_loc(@$); }
-| PROCEDURE proc_decls { $$ = MOVE($2); $$->set_loc(@$); }
-| TYPE type_decls { $$ = MOVE($2); $$->set_loc(@$); }
+  VAR var_decls { $$ = make_shared<Decl>(@$, $2); }
+| PROCEDURE proc_decls { $$ = make_shared<Decl>(@$, $2); }
+| TYPE type_decls { $$ = make_shared<Decl>(@$, $2); }
 ;
 
 var_decls:
-  var_decl { $$ = MAKE_TOKEN(VarDecls, @$); $$->Insert(MOVE($1)); }
-| var_decls var_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  var_decl { $$ = make_shared<VarDecls>(@$); if ($$) $$->Insert($1); }
+| var_decls var_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 var_decl:
   ids type_annot ASSIGN expr SEMICOLON {
-    $$ = MAKE_TOKEN(VarDecl, @$, $ids, $type_annot, $expr);
+    $$ = make_shared<VarDecl>(@$, $ids, $type_annot, $expr);
   }
 ;
 
 type_decls:
-  type_decl { $$ = MAKE_TOKEN(TypeDecls, @$); $$->Insert(MOVE($1)); }
-| type_decls type_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  type_decl { $$ = make_shared<TypeDecls>(@$); if ($$) $$->Insert($1); }
+| type_decls type_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 type_decl:
-  ID IS type SEMICOLON { $$ = MAKE_TOKEN(TypeDecl, @$, $ID, $type); }
+  id IS type SEMICOLON { $$ = make_shared<TypeDecl>(@$, $id, $type); }
 ;
 
 proc_decls:
-  proc_decl { $$ = MAKE_TOKEN(ProcDecls, @$); $$->Insert(MOVE($1)); }
-| proc_decls proc_decl { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  proc_decl { $$ = make_shared<ProcDecls>(@$); if ($$) $$->Insert($1); }
+| proc_decls proc_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 proc_decl:
-  ID LPAREN formal_params RPAREN type_annot IS body SEMICOLON {
-    $$ = MAKE_TOKEN(ProcDecl, @$, $ID, $formal_params, $type_annot, $body);
+  id LPAREN formal_params RPAREN type_annot IS body SEMICOLON {
+    $$ = make_shared<ProcDecl>(@$, $id, $formal_params, $type_annot, $body);
   }
 ;
 
 formal_params:
-  %empty { $$ = MAKE_TOKEN(FormalParams, @$); }
-| formal_param { $$ = MAKE_TOKEN(FormalParams, @$); $$->Insert(MOVE($1)); }
-| formal_params SEMICOLON formal_param { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  %empty { $$ = make_shared<FormalParams>(@$); }
+| formal_param { $$ = make_shared<FormalParams>(@$); if ($$) $$->Insert($1); }
+| formal_params SEMICOLON formal_param { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 formal_param:
-  ids COLON type { $$ = MAKE_TOKEN(FormalParam, @$, $ids, $type); }
+  ids COLON type { $$ = make_shared<FormalParam>(@$, $ids, $type); }
 ;
 
 type_annot:
   %empty { $$ = nullptr; }
-| COLON type { $$ = MAKE_TOKEN(TypeAnnot, @$, $type); }
+| COLON type { $$ = make_shared<TypeAnnot>(@$, $type); }
 ;
 
 type:
-  ID { $$ = MAKE_TOKEN(IdType, @$, $ID); }
-| ARRAY OF type[el_type] { $$ = MAKE_TOKEN(ArrayType, @$, $el_type); }
-| RECORD components END { $$ = MAKE_TOKEN(RecordType, @$, $components); }
+  id { $$ = make_shared<IdType>(@$, $id); }
+| ARRAY OF type[el_type] { $$ = make_shared<ArrayType>(@$, $el_type); }
+| RECORD components END { $$ = make_shared<RecordType>(@$, $components); }
 ;
 
 components:
-  component { $$ = MAKE_TOKEN(Components, @$); $$->Insert(MOVE($1)); }
-| components component { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  component { $$ = make_shared<Components>(@$); if ($$) $$->Insert($1); }
+| components component { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 component:
-  ID COLON type SEMICOLON { $$ = MAKE_TOKEN(Component, @$, $ID, $type); }
+  id COLON type SEMICOLON { $$ = make_shared<Component>(@$, $id, $type); }
 ;
 
 ids:
-  ID { $$ = MAKE_TOKEN(Ids, @$); $$->Insert(MOVE($1)); }
-| ids COMMA ID { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  id { $$ = make_shared<Ids>(@$); if ($$) $$->Insert($1); }
+| ids COMMA id { $$ = $1; if ($$) $$->Insert($3); }
+;
+
+id:
+  ID { $$ = make_shared<Id>(@$, $1); }
 ;
 
 // Statements
 
 stmts:
-  %empty { $$ = MAKE_TOKEN(Stmts, @$); }
-| stmts stmt { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  %empty { $$ = make_shared<Stmts>(@$); }
+| stmts stmt { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 stmt:
   lvalue ASSIGN expr SEMICOLON {
-    $$ = MAKE_TOKEN(AssignStmt, @$, $lvalue, $expr);
+    $$ = make_shared<AssignStmt>(@$, $lvalue, $expr);
   }
-| ID LPAREN actual_params RPAREN SEMICOLON {
-    $$ = MAKE_TOKEN(ProcCallStmt, @$, $ID, $actual_params);
+| id LPAREN actual_params RPAREN SEMICOLON {
+    $$ = make_shared<ProcCallStmt>(@$, $id, $actual_params);
   }
 | READ LPAREN read_params RPAREN SEMICOLON {
-    $$ = MAKE_TOKEN(ReadStmt, @$, $read_params);
+    $$ = make_shared<ReadStmt>(@$, $read_params);
   }
 | WRITE LPAREN write_params RPAREN SEMICOLON {
-    $$ = MAKE_TOKEN(WriteStmt, @$, $write_params);
+    $$ = make_shared<WriteStmt>(@$, $write_params);
   }
-| IF expr THEN stmts elif_sections else_section END SEMICOLON {
-    $$ = MAKE_TOKEN(IfStmt, @$, $expr, $stmts, $elif_sections, $else_section);
+| IF expr THEN stmts elif_sections[elif] else_section[else] END SEMICOLON {
+    $$ = make_shared<IfStmt>(@$, $expr, $stmts, $elif, $else);
   }
 | WHILE expr DO stmts END SEMICOLON {
-    $$ = MAKE_TOKEN(WhileStmt, @$, $expr, $stmts);
+    $$ = make_shared<WhileStmt>(@$, $expr, $stmts);
   }
 | LOOP stmts END SEMICOLON {
-    $$ = MAKE_TOKEN(LoopStmt, @$, $stmts);
+    $$ = make_shared<LoopStmt>(@$, $stmts);
   }
-| FOR ID ASSIGN expr[begin] TO expr[end] for_step DO stmts END SEMICOLON {
-    $$ = MAKE_TOKEN(ForStmt, @$, $ID, $begin, $end, $for_step, $stmts);
+| FOR id ASSIGN expr[begin] TO expr[end] for_step[step] DO stmts END SEMICOLON {
+    $$ = make_shared<ForStmt>(@$, $id, $begin, $end, $step, $stmts);
   }
 | EXIT SEMICOLON {
-    $$ = MAKE_TOKEN(ExitStmt, @$);
+    $$ = make_shared<ExitStmt>(@$);
   }
 | RETURN SEMICOLON {
-    $$ = MAKE_TOKEN(ReturnStmt, @$);
+    $$ = make_shared<ReturnStmt>(@$);
   }
 | RETURN expr SEMICOLON {
-    $$ = MAKE_TOKEN(ReturnStmt, @$, $expr);
+    $$ = make_shared<ReturnStmt>(@$, $expr);
   }
 ;
 
 actual_params:
-  %empty { $$ = MAKE_TOKEN(ActualParams, @$); }
-| exprs { $$ = MAKE_TOKEN(ActualParams, @$); $$->Insert(MOVE($1)); }
+  %empty { $$ = make_shared<ActualParams>(@$); }
+| exprs { $$ = make_shared<ActualParams>(@$); if ($$) $$->InsertArray($1); }
 ;
 
 read_params:
-  lvalues { $$ = MAKE_TOKEN(ReadParams, @$); $$->Insert(MOVE($1)); }
+  lvalues { $$ = make_shared<ReadParams>(@$); if ($$) $$->InsertArray($1); }
 ;
 
 write_params:
-  %empty { $$ = MAKE_TOKEN(WriteParams, @$); }
-| write_exprs { $$ = MAKE_TOKEN(WriteParams, @$); $$->Insert(MOVE($1)); }
+  %empty { $$ = make_shared<WriteParams>(@$); }
+| write_exprs { $$ = make_shared<WriteParams>(@$); if ($$) $$->InsertArray($1); }
 ;
 
 elif_sections:
-  %empty { $$ = MAKE_TOKEN(ElifSections, @$); }
-| elif_sections elif_section { $$ = MOVE($1); $$->Insert(MOVE($2)); }
+  %empty { $$ = make_shared<ElifSections>(@$); }
+| elif_sections elif_section { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 elif_section:
-  ELSIF expr THEN stmts { $$ = MAKE_TOKEN(ElifSection, @$, $expr, $stmts); }
+  ELSIF expr THEN stmts { $$ = make_shared<ElifSection>(@$, $expr, $stmts); }
 ;
 
 else_section:
   %empty { $$ = nullptr; }
-| ELSE stmts { $$ = MAKE_TOKEN(ElseSection, @$, $stmts); }
+| ELSE stmts { $$ = make_shared<ElseSection>(@$, $stmts); }
 ;
 
 for_step:
   %empty { $$ = nullptr; }
-| BY expr { $$ = MAKE_TOKEN(ForStep, @$, $expr); }
+| BY expr { $$ = make_shared<ForStep>(@$, $expr); }
 ;
 
 // Expressions
 
 exprs:
-  expr { $$ = MAKE_TOKEN(Exprs, @$); $$->Insert(MOVE($1)); }
-| exprs COMMA expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  expr { $$ = make_shared<Exprs>(@$); if ($$) $$->Insert($1); }
+| exprs COMMA expr { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 expr:
-  number { $$ = MAKE_TOKEN(NumberExpr, @$, $1); }
-| lvalue { $$ = MAKE_TOKEN(LvalueExpr, @$, $1); }
-| LPAREN expr RPAREN { $$ = MAKE_TOKEN(ParenExpr, @$, $2); }
-| PLUS expr %prec POS { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
-| MINUS expr %prec NEG { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
-| NOT expr { $$ = MAKE_TOKEN(UnaryExpr, @$, MAKE_TOKEN(Op, @1, $1), $2); }
-| expr PLUS expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr MINUS expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr STAR expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr SLASH expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr DIV expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr MOD expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr OR expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr AND expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr LT expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr LE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr GT expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr GE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr EQ expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| expr NE expr { $$ = MAKE_TOKEN(BinaryExpr, @$, $1, MAKE_TOKEN(Op, @2, $2), $3); }
-| ID LPAREN actual_params RPAREN { $$ = MAKE_TOKEN(ProcCallExpr, @$, $1, $3); }
-| ID LCBRAC comp_values RCBRAC { $$ = MAKE_TOKEN(RecordConstrExpr, @$, $1, $3); }
-| ID LSABRAC array_values RSABRAC { $$ = MAKE_TOKEN(ArrayConstrExpr, @$, $1, $3); }
+  number { $$ = make_shared<NumberExpr>(@$, $1); }
+| lvalue { $$ = make_shared<LvalueExpr>(@$, $1); }
+| LPAREN expr RPAREN { $$ = make_shared<ParenExpr>(@$, $2); }
+| PLUS expr %prec POS { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| MINUS expr %prec NEG { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| NOT expr { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| expr PLUS expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr MINUS expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr STAR expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr SLASH expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr DIV expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr MOD expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr OR expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr AND expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr LT expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr LE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr GT expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr GE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr EQ expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr NE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| id LPAREN actual_params RPAREN { $$ = make_shared<ProcCallExpr>(@$, $1, $3); }
+| id LCBRAC comp_values RCBRAC { $$ = make_shared<RecordConstrExpr>(@$, $1, $3); }
+| id LSABRAC array_values RSABRAC { $$ = make_shared<ArrayConstrExpr>(@$, $1, $3); }
 ;
 
 write_exprs:
-  write_expr { $$ = MAKE_TOKEN(WriteExprs, @$); $$->Insert(MOVE($1)); }
-| write_exprs COMMA write_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  write_expr { $$ = make_shared<WriteExprs>(@$); if ($$) $$->Insert($1); }
+| write_exprs COMMA write_expr { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 write_expr:
-  STRING { $$ = MAKE_TOKEN(WriteExpr, @$, $1); }
-| expr { $$ = MAKE_TOKEN(WriteExpr, @$, $1); }
+  string { $$ = make_shared<WriteExpr>(@$, $1); }
+| expr { $$ = make_shared<WriteExpr>(@$, $1); }
 ;
 
 assign_exprs:
-  assign_expr { $$ = MAKE_TOKEN(AssignExprs, @$); $$->Insert(MOVE($1)); }
-| assign_exprs SEMICOLON assign_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  assign_expr { $$ = make_shared<AssignExprs>(@$); if ($$) $$->Insert($1); }
+| assign_exprs SEMICOLON assign_expr { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 assign_expr:
-  ID ASSIGN expr { $$ = MAKE_TOKEN(AssignExpr, @$, $ID, $expr); }
+  id ASSIGN expr { $$ = make_shared<AssignExpr>(@$, $id, $expr); }
 ;
 
 array_exprs:
-  array_expr { $$ = MAKE_TOKEN(ArrayExprs, @$); $$->Insert(MOVE($1)); }
-| array_exprs COMMA array_expr { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  array_expr { $$ = make_shared<ArrayExprs>(@$); if ($$) $$->Insert($1); }
+| array_exprs COMMA array_expr { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 array_expr:
-  expr[v] { $$ = MAKE_TOKEN(ArrayExpr, @$, $v); }
-| expr[n] OF expr[v] { $$ = MAKE_TOKEN(ArrayExpr, @$, $v, $n); }
+  expr[v] { $$ = make_shared<ArrayExpr>(@$, $v); }
+| expr[n] OF expr[v] { $$ = make_shared<ArrayExpr>(@$, $v, $n); }
 ;
 
 number:
-  INTEGER { $$ = MAKE_TOKEN(Number, @$, $1); }
-| REAL { $$ = MAKE_TOKEN(Number, @$, $1); }
+  INTEGER { $$ = make_shared<Integer>(@$, $1); }
+| REAL { $$ = make_shared<Real>(@$, $1); }
+;
+
+string:
+  STRING { $$ = make_shared<String>(@$, $1)); }
 ;
 
 lvalues:
-  lvalue { $$ = MAKE_TOKEN(Lvalues, @$); $$->Insert(MOVE($1)); }
-| lvalues COMMA lvalue { $$ = MOVE($1); $$->Insert(MOVE($3)); }
+  lvalue { $$ = make_shared<Lvalues>(@$); if ($$) $$->Insert($1); }
+| lvalues COMMA lvalue { $$ = $1; if ($$) $$->Insert($3); }
 ;
 
 lvalue:
-  ID { $$ = MAKE_TOKEN(IdLvalue, @$, $1); }
-| lvalue LSBRAC expr RSBRAC { $$ = MAKE_TOKEN(ArrayElemLvalue, @$, $1, $3); }
-| lvalue DOT ID { $$ = MAKE_TOKEN(RecordCompLvalue, @$, $1, $3); }
+  id { $$ = make_shared<IdLvalue>(@$, $1); }
+| lvalue LSBRAC expr RSBRAC { $$ = make_shared<ArrayElemLvalue>(@$, $1, $3); }
+| lvalue DOT id { $$ = make_shared<RecordCompLvalue>(@$, $1, $3); }
 ;
 
 comp_values:
-  assign_exprs { $$ = MOVE($1); }
+  assign_exprs { $$ = make_shared<CompValues>(@$, $1); }
 ;
 
 array_values:
-  array_exprs { $$ = MOVE($1); }
+  array_exprs { $$ = make_shared<ArrayValues>(@$, $1); }
 ;
 %%
 

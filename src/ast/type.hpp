@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 
 #include "../base/common.hpp"
 #include "../location.hpp"
@@ -20,29 +19,29 @@ class Type : public Node {
 
 class TypeAnnot : public Node {
  public:
-  explicit TypeAnnot(const yy::location& loc, UPtr<Type> p_type)
-      : Node{loc}, p_type_{std::move(p_type)} {}
+  explicit TypeAnnot(const yy::location& loc, SPtr<Type> p_type)
+      : Node{loc}, p_type_{p_type} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "type annotation";
-  UPtr<Type> p_type_;
+  SPtr<Type> p_type_;
 };
 
 class Component : public Node {
  public:
-  explicit Component(const yy::location& loc, UPtr<Id> p_id, UPtr<Type> p_type)
-      : Node{loc}, p_id_{std::move(p_id)}, p_type_{std::move(p_type)} {}
+  explicit Component(const yy::location& loc, SPtr<Id> p_id, SPtr<Type> p_type)
+      : Node{loc}, p_id_{p_id}, p_type_{p_type} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "component";
-  UPtr<Id> p_id_;
-  UPtr<Type> p_type_;
+  SPtr<Id> p_id_;
+  SPtr<Type> p_type_;
 };
 
 class Components : public Nodes {
@@ -55,41 +54,41 @@ class Components : public Nodes {
 
 class IdType : public Type {
  public:
-  explicit IdType(const yy::location& loc, UPtr<Id> p_id)
-      : Type{loc}, p_id_{std::move(p_id)} {}
+  explicit IdType(const yy::location& loc, SPtr<Id> p_id)
+      : Type{loc}, p_id_{p_id} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "identifier type";
-  UPtr<Id> p_id_;
+  SPtr<Id> p_id_;
 };
 
 class ArrayType : public Type {
  public:
-  explicit ArrayType(const yy::location& loc, UPtr<Type> p_type)
-      : Type{loc}, p_type_{std::move(p_type)} {}
+  explicit ArrayType(const yy::location& loc, SPtr<Type> p_type)
+      : Type{loc}, p_type_{p_type} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "array type";
-  UPtr<Type> p_type_;
+  SPtr<Type> p_type_;
 };
 
 class RecordType : public Type {
  public:
-  explicit RecordType(const yy::location& loc, UPtr<Components> p_components)
-      : Type{loc}, p_components_{std::move(p_components)} {}
+  explicit RecordType(const yy::location& loc, SPtr<Components> p_components)
+      : Type{loc}, p_components_{p_components} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "record type";
-  UPtr<Components> p_components_;
+  SPtr<Components> p_components_;
 };
 
 #endif  // SRC_AST_TYPE_HPP_

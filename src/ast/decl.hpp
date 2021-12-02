@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 #include <vector>
 
 #include "../base/common.hpp"
@@ -13,12 +12,16 @@
 #include "param.hpp"
 #include "type.hpp"
 
+class Decls;
+
 class Decl : public Node {
  public:
-  explicit Decl(const yy::location& loc) : Node{loc} {}
+  explicit Decl(const yy::location& loc, SPtr<Decls> p_decls = nullptr)
+      : Node{loc}, p_decls_{p_decls} {}
 
  protected:
   const std::string name_ = "declaration";
+  SPtr<Decls> p_decls_;
 };
 
 class Decls : public Nodes {
@@ -27,29 +30,29 @@ class Decls : public Nodes {
 
  protected:
   const std::string name_ = "declaration list";
-  std::vector<UPtr<Decl>> data_;
+  std::vector<SPtr<Decl>> data_;
 };
 
 class VarDecl : public Decl {
  public:
   explicit VarDecl(
       const yy::location& loc,
-      UPtr<Ids> p_ids,
-      UPtr<TypeAnnot> p_type_annot,
-      UPtr<Expr> p_expr)
+      SPtr<Ids> p_ids,
+      SPtr<TypeAnnot> p_type_annot,
+      SPtr<Expr> p_expr)
       : Decl{loc},
-        p_ids_{std::move(p_ids)},
-        p_type_annot_{std::move(p_type_annot)},
-        p_expr_{std::move(p_expr)} {}
+        p_ids_{p_ids},
+        p_type_annot_{p_type_annot},
+        p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "variable declaration";
-  UPtr<Ids> p_ids_;
-  UPtr<TypeAnnot> p_type_annot_;
-  UPtr<Expr> p_expr_;
+  SPtr<Ids> p_ids_;
+  SPtr<TypeAnnot> p_type_annot_;
+  SPtr<Expr> p_expr_;
 };
 
 class VarDecls : public Decls {
@@ -58,21 +61,21 @@ class VarDecls : public Decls {
 
  protected:
   const std::string name_ = "variable declaration list";
-  std::vector<UPtr<VarDecl>> data_;
+  std::vector<SPtr<VarDecl>> data_;
 };
 
 class TypeDecl : public Decl {
  public:
-  explicit TypeDecl(const yy::location& loc, UPtr<Id> p_id, UPtr<Type> p_type)
-      : Decl{loc}, p_id_{std::move(p_id)}, p_type_{std::move(p_type)} {}
+  explicit TypeDecl(const yy::location& loc, SPtr<Id> p_id, SPtr<Type> p_type)
+      : Decl{loc}, p_id_{p_id}, p_type_{p_type} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "type declaration";
-  UPtr<Id> p_id_;
-  UPtr<Type> p_type_;
+  SPtr<Id> p_id_;
+  SPtr<Type> p_type_;
 };
 
 class TypeDecls : public Decls {
@@ -81,7 +84,7 @@ class TypeDecls : public Decls {
 
  protected:
   const std::string name_ = "type declaration list";
-  std::vector<UPtr<TypeDecl>> data_;
+  std::vector<SPtr<TypeDecl>> data_;
 };
 
 class Body;
@@ -90,25 +93,25 @@ class ProcDecl : public Decl {
  public:
   explicit ProcDecl(
       const yy::location& loc,
-      UPtr<Id> p_id,
-      UPtr<FormalParams> p_formal_params,
-      UPtr<TypeAnnot> p_type_annot,
-      UPtr<Body> p_body)
+      SPtr<Id> p_id,
+      SPtr<FormalParams> p_formal_params,
+      SPtr<TypeAnnot> p_type_annot,
+      SPtr<Body> p_body)
       : Decl{loc},
-        p_id_{std::move(p_id)},
-        p_formal_params_{std::move(p_formal_params)},
-        p_type_annot_{std::move(p_type_annot)},
-        p_body_{std::move(p_body)} {}
+        p_id_{p_id},
+        p_formal_params_{p_formal_params},
+        p_type_annot_{p_type_annot},
+        p_body_{p_body} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "type declaration";
-  UPtr<Id> p_id_;
-  UPtr<FormalParams> p_formal_params_;
-  UPtr<TypeAnnot> p_type_annot_;
-  UPtr<Body> p_body_;
+  SPtr<Id> p_id_;
+  SPtr<FormalParams> p_formal_params_;
+  SPtr<TypeAnnot> p_type_annot_;
+  SPtr<Body> p_body_;
 };
 
 class ProcDecls : public Decls {
@@ -117,7 +120,7 @@ class ProcDecls : public Decls {
 
  protected:
   const std::string name_ = "procedure declaration list";
-  std::vector<UPtr<ProcDecl>> data_;
+  std::vector<SPtr<ProcDecl>> data_;
 };
 
 #endif  // SRC_AST_DECL_HPP_

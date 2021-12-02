@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 #include <variant>  // std::variant
 #include <vector>
 
@@ -30,82 +29,79 @@ class Exprs : public Nodes {
 
  protected:
   const std::string name_ = "expression list";
-  std::vector<UPtr<Expr>> data_;
+  std::vector<SPtr<Expr>> data_;
 };
 
 class NumberExpr : public Expr {
  public:
-  explicit NumberExpr(const yy::location& loc, UPtr<Number> p_number)
-      : Expr{loc}, p_number_{std::move(p_number)} {}
+  explicit NumberExpr(const yy::location& loc, SPtr<Number> p_number)
+      : Expr{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "number expression";
-  UPtr<Number> p_number_;
+  SPtr<Number> p_number_;
 };
 
 class LvalueExpr : public Expr {
  public:
-  explicit LvalueExpr(const yy::location& loc, UPtr<Lvalue> p_lvalue)
-      : Expr{loc}, p_lvalue_{std::move(p_lvalue)} {}
+  explicit LvalueExpr(const yy::location& loc, SPtr<Lvalue> p_lvalue)
+      : Expr{loc}, p_lvalue_{p_lvalue} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "lvalue expression";
-  UPtr<Lvalue> p_lvalue_;
+  SPtr<Lvalue> p_lvalue_;
 };
 
 class ParenExpr : public Expr {
  public:
-  explicit ParenExpr(const yy::location& loc, UPtr<Expr> p_expr)
-      : Expr{loc}, p_expr_{std::move(p_expr)} {}
+  explicit ParenExpr(const yy::location& loc, SPtr<Expr> p_expr)
+      : Expr{loc}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "parenthesis expression";
-  UPtr<Expr> p_expr_;
+  SPtr<Expr> p_expr_;
 };
 
 class UnaryExpr : public Expr {
  public:
-  explicit UnaryExpr(const yy::location& loc, UPtr<Op> p_op, UPtr<Expr> p_expr)
-      : Expr{loc}, p_op_{std::move(p_op)}, p_expr_{std::move(p_expr)} {}
+  explicit UnaryExpr(const yy::location& loc, SPtr<Op> p_op, SPtr<Expr> p_expr)
+      : Expr{loc}, p_op_{p_op}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "unary expression";
-  UPtr<Op> p_op_;
-  UPtr<Expr> p_expr_;
+  SPtr<Op> p_op_;
+  SPtr<Expr> p_expr_;
 };
 
 class BinaryExpr : public Expr {
  public:
   explicit BinaryExpr(
       const yy::location& loc,
-      UPtr<Expr> p_expr1,
-      UPtr<Op> p_op,
-      UPtr<Expr> p_expr2)
-      : Expr{loc},
-        p_expr1_{std::move(p_expr1)},
-        p_op_{std::move(p_op)},
-        p_expr2_{std::move(p_expr2)} {}
+      SPtr<Expr> p_expr1,
+      SPtr<Op> p_op,
+      SPtr<Expr> p_expr2)
+      : Expr{loc}, p_expr1_{p_expr1}, p_op_{p_op}, p_expr2_{p_expr2} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "binary expression";
-  UPtr<Expr> p_expr1_;
-  UPtr<Op> p_op_;
-  UPtr<Expr> p_expr2_;
+  SPtr<Expr> p_expr1_;
+  SPtr<Op> p_op_;
+  SPtr<Expr> p_expr2_;
 };
 
 class ActualParams;
@@ -114,33 +110,31 @@ class ProcCallExpr : public Expr {
  public:
   explicit ProcCallExpr(
       const yy::location& loc,
-      UPtr<Id> p_id,
-      UPtr<ActualParams> p_actual_params)
-      : Expr{loc},
-        p_id_{std::move(p_id)},
-        p_actual_params_{std::move(p_actual_params)} {}
+      SPtr<Id> p_id,
+      SPtr<ActualParams> p_actual_params)
+      : Expr{loc}, p_id_{p_id}, p_actual_params_{p_actual_params} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "procedure call expression";
-  UPtr<Id> p_id_;
-  UPtr<ActualParams> p_actual_params_;
+  SPtr<Id> p_id_;
+  SPtr<ActualParams> p_actual_params_;
 };
 
 class AssignExpr : public Expr {
  public:
-  explicit AssignExpr(const yy::location& loc, UPtr<Id> p_id, UPtr<Expr> p_expr)
-      : Expr{loc}, p_id_{std::move(p_id)}, p_expr_{std::move(p_expr)} {}
+  explicit AssignExpr(const yy::location& loc, SPtr<Id> p_id, SPtr<Expr> p_expr)
+      : Expr{loc}, p_id_{p_id}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "assign expression";
-  UPtr<Id> p_id_;
-  UPtr<Expr> p_expr_;
+  SPtr<Id> p_id_;
+  SPtr<Expr> p_expr_;
 };
 
 class AssignExprs : public Nodes {
@@ -149,47 +143,50 @@ class AssignExprs : public Nodes {
 
  protected:
   const std::string name_ = "assign expression list";
-  std::vector<UPtr<AssignExpr>> data_;
+  std::vector<SPtr<AssignExpr>> data_;
 };
 
-class CompValues : public AssignExprs {
+class CompValues : public Node {
  public:
-  explicit CompValues(const yy::location& loc) : AssignExprs{loc} {}
+  explicit CompValues(const yy::location& loc, SPtr<AssignExprs> p_assign_exprs)
+      : Node{loc}, p_assign_exprs_{p_assign_exprs} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "component values";
+  SPtr<AssignExprs> p_assign_exprs_;
 };
 
 class RecordConstrExpr : public Expr {
  public:
   explicit RecordConstrExpr(
-      const yy::location& loc, UPtr<Id> p_id, UPtr<CompValues> p_comp_values)
-      : Expr{loc},
-        p_id_{std::move(p_id)},
-        p_comp_values_{std::move(p_comp_values)} {}
+      const yy::location& loc, SPtr<Id> p_id, SPtr<CompValues> p_comp_values)
+      : Expr{loc}, p_id_{p_id}, p_comp_values_{p_comp_values} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "record construction expression";
-  UPtr<Id> p_id_;
-  UPtr<CompValues> p_comp_values_;
+  SPtr<Id> p_id_;
+  SPtr<CompValues> p_comp_values_;
 };
 
 class ArrayExpr : public Expr {
  public:
   explicit ArrayExpr(
-      const yy::location& loc, UPtr<Expr> p_value, UPtr<Expr> p_num = nullptr)
-      : Expr{loc}, p_value_{std::move(p_value)}, p_num_{std::move(p_num)} {}
+      const yy::location& loc, SPtr<Expr> p_value, SPtr<Expr> p_num = nullptr)
+      : Expr{loc}, p_value_{p_value}, p_num_{p_num} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "array expression";
-  UPtr<Expr> p_value_;
-  UPtr<Expr> p_num_;
+  SPtr<Expr> p_value_;
+  SPtr<Expr> p_num_;
 };
 
 class ArrayExprs : public Nodes {
@@ -198,40 +195,43 @@ class ArrayExprs : public Nodes {
 
  protected:
   const std::string name_ = "array expression list";
-  std::vector<UPtr<ArrayExpr>> data_;
+  std::vector<SPtr<ArrayExpr>> data_;
 };
 
-class ArrayValues : public ArrayExprs {
+class ArrayValues : public Node {
  public:
-  explicit ArrayValues(const yy::location& loc) : ArrayExprs{loc} {}
+  explicit ArrayValues(const yy::location& loc, SPtr<ArrayExprs> p_array_exprs)
+      : Node{loc}, p_array_exprs_{p_array_exprs} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "array values";
+  SPtr<ArrayExprs> p_array_exprs_;
 };
 
 class ArrayConstrExpr : public Expr {
  public:
   explicit ArrayConstrExpr(
-      const yy::location& loc, UPtr<Id> p_id, UPtr<ArrayValues> p_array_values)
-      : Expr{loc},
-        p_id_{std::move(p_id)},
-        p_array_values_{std::move(p_array_values)} {}
+      const yy::location& loc, SPtr<Id> p_id, SPtr<ArrayValues> p_array_values)
+      : Expr{loc}, p_id_{p_id}, p_array_values_{p_array_values} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
  protected:
   const std::string name_ = "array construction expression";
-  UPtr<Id> p_id_;
-  UPtr<ArrayValues> p_array_values_;
+  SPtr<Id> p_id_;
+  SPtr<ArrayValues> p_array_values_;
 };
 
 class WriteExpr : public Expr {
  public:
-  using UnionPtr = std::variant<UPtr<String>, UPtr<Expr>>;
+  using UnionPtr = std::variant<SPtr<String>, SPtr<Expr>>;
 
   explicit WriteExpr(const yy::location& loc, UnionPtr p_write_expr)
-      : Expr{loc}, p_write_expr_{std::move(p_write_expr)} {}
+      : Expr{loc}, p_write_expr_{p_write_expr} {}
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
@@ -247,7 +247,7 @@ class WriteExprs : public Nodes {
 
  protected:
   const std::string name_ = "write expression list";
-  std::vector<UPtr<WriteExpr>> data_;
+  std::vector<SPtr<WriteExpr>> data_;
 };
 
 #endif  // SRC_AST_EXPR_HPP_

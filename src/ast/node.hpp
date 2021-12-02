@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 #include <vector>
 
 #include "../base/common.hpp"
@@ -47,14 +46,14 @@ class Nodes : public Node {
  public:
   explicit Nodes(const yy::location& loc) : Node{loc} {}
 
-  void Insert(UPtr<Node> p_node);
-  void Insert(UPtr<Nodes> p_nodes);
+  void Insert(SPtr<Node> p_node);
+  void InsertArray(SPtr<Nodes> p_nodes);
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "nodes";
-  std::vector<UPtr<Node>> data_;
+  std::vector<SPtr<Node>> data_;
 };
 
 #endif  // SRC_AST_NODE_HPP_

@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <utility>  // std::move
 #include <vector>
 
 #include "../base/common.hpp"
@@ -27,22 +26,22 @@ class Params : public Nodes {
 
  protected:
   const std::string name_ = "parameter list";
-  std::vector<UPtr<Param>> data_;
+  std::vector<SPtr<Param>> data_;
 };
 
 class FormalParam : public Param {
  public:
   explicit FormalParam(
-      const yy::location& loc, UPtr<Ids> p_ids, UPtr<Type> p_type)
-      : Param{loc}, p_ids_{std::move(p_ids)}, p_type_{std::move(p_type)} {}
+      const yy::location& loc, SPtr<Ids> p_ids, SPtr<Type> p_type)
+      : Param{loc}, p_ids_{p_ids}, p_type_{p_type} {}
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
  protected:
   const std::string name_ = "formal parameter";
-  UPtr<Ids> p_ids_;
-  UPtr<Type> p_type_;
+  SPtr<Ids> p_ids_;
+  SPtr<Type> p_type_;
 };
 
 class FormalParams : public Params {
@@ -51,7 +50,7 @@ class FormalParams : public Params {
 
  protected:
   const std::string name_ = "formal parameter list";
-  std::vector<UPtr<FormalParam>> data_;
+  std::vector<SPtr<FormalParam>> data_;
 };
 
 class ActualParams : public Exprs {
