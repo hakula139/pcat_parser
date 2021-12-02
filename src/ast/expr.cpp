@@ -206,7 +206,7 @@ void AssignExpr::Print(std::ostream& os) const {
 std::string AssignExpr::value() const {
   auto id = p_id_ ? p_id_->value() : "";
   auto expr = p_expr_ ? p_expr_->value() : "";
-  return id + " = " + expr;
+  return id + " := " + expr;
 }
 
 void ArrayExpr::UpdateDepth(int depth) {
