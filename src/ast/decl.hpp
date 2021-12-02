@@ -19,6 +19,9 @@ class Decl : public Node {
   explicit Decl(const yy::location& loc, SPtr<Decls> p_decls = nullptr)
       : Node{loc}, p_decls_{p_decls} {}
 
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
   std::string name() const override { return name_; }
 
  private:

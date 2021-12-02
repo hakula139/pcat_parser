@@ -14,7 +14,10 @@ void Node::PrintIndent(std::ostream& os) const {
   os << std::string(depth_ * 2, ' ');
 }
 
-void Node::PrintLocation(std::ostream& os) const { os << loc_; }
+void Node::PrintLocation(std::ostream& os) const {
+  os << "@ <" << loc_.begin.line << ":" << loc_.begin.column << "-"
+     << loc_.end.line << ":" << loc_.end.column << ">";
+}
 
 void Node::PrintBase(std::ostream& os) const {
   PrintIndent(os);
