@@ -12,8 +12,8 @@
 
 using location_type = yy::Parser::location_type;
 using symbol_type = yy::Parser::symbol_type;
-using MakeTable =
-    std::unordered_map<std::string, symbol_type (*)(location_type loc)>;
+using MakeTable = std::unordered_map<
+    std::string, symbol_type (*)(std::string s, location_type loc)>;
 
 symbol_type make_INTEGER(const std::string& s, const location_type& loc);
 symbol_type make_REAL(const std::string& s, const location_type& loc);
@@ -156,7 +156,7 @@ symbol_type make_ID(const std::string& s, const location_type& loc) {
 
   auto entry = make_keyword_table.find(s);
   if (entry != make_keyword_table.end()) {
-    return (entry->second)(loc);
+    return (entry->second)(s, loc);
   }
 
   return yy::Parser::make_ID(s, loc);
@@ -177,7 +177,7 @@ static const MakeTable make_operator_table{
 };
 
 symbol_type make_OPERATOR(const std::string& s, const location_type& loc) {
-  return make_operator_table.at(s)(loc);
+  return make_operator_table.at(s)(s, loc);
 }
 
 static const MakeTable make_delimiter_table{
@@ -197,7 +197,7 @@ static const MakeTable make_delimiter_table{
 };
 
 symbol_type make_DELIMITER(const std::string& s, const location_type& loc) {
-  return make_delimiter_table.at(s)(loc);
+  return make_delimiter_table.at(s)(s, loc);
 }
 
 void skip_COMMENTS(const std::string& s, const location_type& loc) {
