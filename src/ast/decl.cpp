@@ -4,16 +4,6 @@
 
 #include "body.hpp"
 
-void Decl::UpdateDepth(int depth) {
-  Node::UpdateDepth(depth);
-  if (p_decls_) p_decls_->UpdateDepth(depth + 1);
-}
-
-void Decl::Print(std::ostream& os) const {
-  Node::Print(os);
-  if (p_decls_) p_decls_->Print(os);
-}
-
 void VarDecl::UpdateDepth(int depth) {
   Decl::UpdateDepth(depth);
   if (p_ids_) p_ids_->UpdateDepth(depth + 1);

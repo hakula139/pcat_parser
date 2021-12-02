@@ -141,11 +141,8 @@ int yyFlexLexer::yylex() {
   // Declarations
   <SPtr<Decls>>               decls
   <SPtr<Decl>>                decl
-  <SPtr<VarDecls>>            var_decls
   <SPtr<VarDecl>>             var_decl
-  <SPtr<TypeDecls>>           type_decls
   <SPtr<TypeDecl>>            type_decl
-  <SPtr<ProcDecls>>           proc_decls
   <SPtr<ProcDecl>>            proc_decl
   <SPtr<FormalParams>>        formal_params
   <SPtr<FormalParam>>         formal_param
@@ -210,14 +207,9 @@ decls:
 ;
 
 decl:
-  VAR var_decls { $$ = make_shared<Decl>(@$, $2); }
-| PROCEDURE proc_decls { $$ = make_shared<Decl>(@$, $2); }
-| TYPE type_decls { $$ = make_shared<Decl>(@$, $2); }
-;
-
-var_decls:
-  var_decl { $$ = make_shared<VarDecls>(@$); if ($$) $$->Insert($1); }
-| var_decls var_decl { $$ = $1; if ($$) $$->Insert($2); }
+  VAR var_decl { $$ = $2; $$->set_loc(@$); }
+| PROCEDURE proc_decl { $$ = $2; $$->set_loc(@$); }
+| TYPE type_decl { $$ = $2; $$->set_loc(@$); }
 ;
 
 var_decl:
@@ -226,18 +218,8 @@ var_decl:
   }
 ;
 
-type_decls:
-  type_decl { $$ = make_shared<TypeDecls>(@$); if ($$) $$->Insert($1); }
-| type_decls type_decl { $$ = $1; if ($$) $$->Insert($2); }
-;
-
 type_decl:
   id IS type SEMICOLON { $$ = make_shared<TypeDecl>(@$, $id, $type); }
-;
-
-proc_decls:
-  proc_decl { $$ = make_shared<ProcDecls>(@$); if ($$) $$->Insert($1); }
-| proc_decls proc_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 proc_decl:

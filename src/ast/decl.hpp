@@ -16,17 +16,12 @@ class Decls;
 
 class Decl : public Node {
  public:
-  explicit Decl(const yy::location& loc, SPtr<Decls> p_decls = nullptr)
-      : Node{loc}, p_decls_{p_decls} {}
-
-  void UpdateDepth(int depth) override;
-  void Print(std::ostream& os) const override;
+  explicit Decl(const yy::location& loc) : Node{loc} {}
 
   std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "declaration";
-  SPtr<Decls> p_decls_;
 };
 
 class Decls : public Nodes {
@@ -64,17 +59,6 @@ class VarDecl : public Decl {
   SPtr<Expr> p_expr_;
 };
 
-class VarDecls : public Decls {
- public:
-  explicit VarDecls(const yy::location& loc) : Decls{loc} {}
-
-  std::string name() const override { return name_; }
-
- private:
-  const std::string name_ = "variable declaration list";
-  std::vector<SPtr<VarDecl>> data_;
-};
-
 class TypeDecl : public Decl {
  public:
   explicit TypeDecl(const yy::location& loc, SPtr<Id> p_id, SPtr<Type> p_type)
@@ -89,17 +73,6 @@ class TypeDecl : public Decl {
   const std::string name_ = "type declaration";
   SPtr<Id> p_id_;
   SPtr<Type> p_type_;
-};
-
-class TypeDecls : public Decls {
- public:
-  explicit TypeDecls(const yy::location& loc) : Decls{loc} {}
-
-  std::string name() const override { return name_; }
-
- private:
-  const std::string name_ = "type declaration list";
-  std::vector<SPtr<TypeDecl>> data_;
 };
 
 class Body;
@@ -129,17 +102,6 @@ class ProcDecl : public Decl {
   SPtr<FormalParams> p_formal_params_;
   SPtr<TypeAnnot> p_type_annot_;
   SPtr<Body> p_body_;
-};
-
-class ProcDecls : public Decls {
- public:
-  explicit ProcDecls(const yy::location& loc) : Decls{loc} {}
-
-  std::string name() const override { return name_; }
-
- private:
-  const std::string name_ = "procedure declaration list";
-  std::vector<SPtr<ProcDecl>> data_;
 };
 
 #endif  // SRC_AST_DECL_HPP_
