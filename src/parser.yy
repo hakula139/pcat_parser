@@ -210,14 +210,14 @@ decls:
 ;
 
 decl:
-  VAR var_decls { $$ = $2; $$->set_loc(@$); }
-| PROCEDURE proc_decls { $$ = $2; $$->set_loc(@$); }
-| TYPE type_decls { $$ = $2; $$->set_loc(@$); }
+  VAR var_decls { $$ = $2; if ($$) $$->set_loc(@$); }
+| PROCEDURE proc_decls { $$ = $2; if ($$) $$->set_loc(@$); }
+| TYPE type_decls { $$ = $2; if ($$) $$->set_loc(@$); }
 ;
 
 var_decls:
   var_decl { $$ = make_shared<VarDecls>(@$); if ($$) $$->Insert($1); }
-| var_decls var_decl { $$ = make_shared<VarDecls>(@$); if ($$) $$->Insert($1); }
+| var_decls var_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 var_decl:
@@ -228,7 +228,7 @@ var_decl:
 
 type_decls:
   type_decl { $$ = make_shared<TypeDecls>(@$); if ($$) $$->Insert($1); }
-| type_decls type_decl { $$ = make_shared<TypeDecls>(@$); if ($$) $$->Insert($1); }
+| type_decls type_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 type_decl:
@@ -237,7 +237,7 @@ type_decl:
 
 proc_decls:
   proc_decl { $$ = make_shared<ProcDecls>(@$); if ($$) $$->Insert($1); }
-| proc_decls proc_decl { $$ = make_shared<ProcDecls>(@$); if ($$) $$->Insert($1); }
+| proc_decls proc_decl { $$ = $1; if ($$) $$->Insert($2); }
 ;
 
 proc_decl:
