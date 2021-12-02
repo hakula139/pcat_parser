@@ -84,6 +84,12 @@ void ElseSection::Print(std::ostream& os) const {
   if (p_stmts_) p_stmts_->Print(os);
 }
 
+void WhileStmt::UpdateDepth(int depth) {
+  Stmt::UpdateDepth(depth);
+  if (p_expr_) p_expr_->UpdateDepth(depth + 1);
+  if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
+}
+
 void WhileStmt::Print(std::ostream& os) const {
   Stmt::Print(os);
   if (p_expr_) p_expr_->Print(os);

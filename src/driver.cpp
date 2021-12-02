@@ -6,7 +6,7 @@
 
 #include "parser.hpp"
 
-Driver::Driver() : lexer_{this}, parser_{&lexer_} {
+Driver::Driver() : lexer_{this}, parser_{&lexer_, this} {
   lexer_.set_debug(trace_scanning_);
   parser_.set_debug_level(trace_parsing_);
 }
