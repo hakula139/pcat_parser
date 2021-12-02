@@ -177,6 +177,8 @@ int yyFlexLexer::yylex() {
   <SPtr<ArrayExprs>>          array_exprs
   <SPtr<ArrayExpr>>           array_expr
   <SPtr<Number>>              number
+  <SPtr<Integer>>             integer
+  <SPtr<Real>>                real
   <SPtr<String>>              string
   <SPtr<Lvalues>>             lvalues
   <SPtr<Lvalue>>              lvalue
@@ -422,12 +424,20 @@ array_expr:
 ;
 
 number:
+  integer { $$ = make_shared<Number>(@$, $1); }
+| real { $$ = make_shared<Number>(@$, $1); }
+;
+
+integer:
   INTEGER { $$ = make_shared<Integer>(@$, $1); }
-| REAL { $$ = make_shared<Real>(@$, $1); }
+;
+
+real:
+  REAL { $$ = make_shared<Real>(@$, $1); }
 ;
 
 string:
-  STRING { $$ = make_shared<String>(@$, $1)); }
+  STRING { $$ = make_shared<String>(@$, $1); }
 ;
 
 lvalues:
