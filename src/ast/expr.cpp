@@ -86,7 +86,7 @@ void BinaryExpr::Print(std::ostream& os) const {
 std::string BinaryExpr::value() const {
   auto expr1 = p_expr1_ ? p_expr1_->value() : "";
   auto op = p_op_ ? p_op_->value() : "";
-  auto expr2 = p_expr2_ ? p_expr1_->value() : "";
+  auto expr2 = p_expr2_ ? p_expr2_->value() : "";
   return expr1 + " " + op + " " + expr2;
 }
 
