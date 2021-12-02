@@ -19,6 +19,8 @@ class Expr : public ValueNode {
   explicit Expr(const yy::location& loc, const std::string& value = "")
       : ValueNode{loc, value} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "expression";
 };
@@ -26,6 +28,8 @@ class Expr : public ValueNode {
 class Exprs : public Nodes {
  public:
   explicit Exprs(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "expression list";
@@ -38,6 +42,8 @@ class NumberExpr : public Expr {
       : Expr{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -51,6 +57,8 @@ class LvalueExpr : public Expr {
       : Expr{loc}, p_lvalue_{p_lvalue} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -64,6 +72,8 @@ class ParenExpr : public Expr {
       : Expr{loc}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -77,6 +87,8 @@ class UnaryExpr : public Expr {
       : Expr{loc}, p_op_{p_op}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -95,6 +107,8 @@ class BinaryExpr : public Expr {
       : Expr{loc}, p_expr1_{p_expr1}, p_op_{p_op}, p_expr2_{p_expr2} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -115,6 +129,8 @@ class ProcCallExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_actual_params_{p_actual_params} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -129,6 +145,8 @@ class AssignExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -140,6 +158,8 @@ class AssignExpr : public Expr {
 class AssignExprs : public Nodes {
  public:
   explicit AssignExprs(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "assign expression list";
@@ -154,6 +174,8 @@ class CompValues : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "component values";
   SPtr<AssignExprs> p_assign_exprs_;
@@ -166,6 +188,8 @@ class RecordConstrExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_comp_values_{p_comp_values} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -181,6 +205,8 @@ class ArrayExpr : public Expr {
       : Expr{loc}, p_value_{p_value}, p_num_{p_num} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -192,6 +218,8 @@ class ArrayExpr : public Expr {
 class ArrayExprs : public Nodes {
  public:
   explicit ArrayExprs(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "array expression list";
@@ -206,6 +234,8 @@ class ArrayValues : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "array values";
   SPtr<ArrayExprs> p_array_exprs_;
@@ -218,6 +248,8 @@ class ArrayConstrExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_array_values_{p_array_values} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -234,6 +266,8 @@ class WriteExpr : public Expr {
       : Expr{loc}, p_write_expr_{p_write_expr} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -244,6 +278,8 @@ class WriteExpr : public Expr {
 class WriteExprs : public Nodes {
  public:
   explicit WriteExprs(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "write expression list";

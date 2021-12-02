@@ -14,6 +14,8 @@ class Lvalue : public ValueNode {
  public:
   explicit Lvalue(const yy::location& loc) : ValueNode{loc} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "lvalue";
 };
@@ -21,6 +23,8 @@ class Lvalue : public ValueNode {
 class Lvalues : public Nodes {
  public:
   explicit Lvalues(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "lvalue list";
@@ -34,6 +38,8 @@ class IdLvalue : public Lvalue {
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "identifier lvalue";
@@ -51,6 +57,8 @@ class ArrayElemLvalue : public Lvalue {
   void UpdateDepth(int depth) override;
   std::string value() const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "array element lvalue";
   SPtr<Lvalue> p_lvalue_;
@@ -65,6 +73,8 @@ class RecordCompLvalue : public Lvalue {
 
   void UpdateDepth(int depth) override;
   std::string value() const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "record component lvalue";

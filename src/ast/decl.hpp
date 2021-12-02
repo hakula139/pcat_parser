@@ -19,6 +19,8 @@ class Decl : public Node {
   explicit Decl(const yy::location& loc, SPtr<Decls> p_decls = nullptr)
       : Node{loc}, p_decls_{p_decls} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "declaration";
   SPtr<Decls> p_decls_;
@@ -27,6 +29,8 @@ class Decl : public Node {
 class Decls : public Nodes {
  public:
   explicit Decls(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "declaration list";
@@ -48,6 +52,8 @@ class VarDecl : public Decl {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "variable declaration";
   SPtr<Ids> p_ids_;
@@ -58,6 +64,8 @@ class VarDecl : public Decl {
 class VarDecls : public Decls {
  public:
   explicit VarDecls(const yy::location& loc) : Decls{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "variable declaration list";
@@ -72,6 +80,8 @@ class TypeDecl : public Decl {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "type declaration";
   SPtr<Id> p_id_;
@@ -81,6 +91,8 @@ class TypeDecl : public Decl {
 class TypeDecls : public Decls {
  public:
   explicit TypeDecls(const yy::location& loc) : Decls{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "type declaration list";
@@ -106,6 +118,8 @@ class ProcDecl : public Decl {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "type declaration";
   SPtr<Id> p_id_;
@@ -117,6 +131,8 @@ class ProcDecl : public Decl {
 class ProcDecls : public Decls {
  public:
   explicit ProcDecls(const yy::location& loc) : Decls{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "procedure declaration list";

@@ -18,7 +18,7 @@ void Node::PrintLocation(std::ostream& os) const { os << loc_; }
 
 void Node::PrintBase(std::ostream& os) const {
   PrintIndent(os);
-  os << name_ << " ";
+  os << name() << " ";
   PrintLocation(os);
 }
 

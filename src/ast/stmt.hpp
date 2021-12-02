@@ -16,6 +16,8 @@ class Stmt : public Node {
  public:
   explicit Stmt(const yy::location& loc) : Node{loc} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "statement";
 };
@@ -23,6 +25,8 @@ class Stmt : public Node {
 class Stmts : public Nodes {
  public:
   explicit Stmts(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "statement list";
@@ -37,6 +41,8 @@ class AssignStmt : public Stmt {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "assignment statement";
@@ -55,6 +61,8 @@ class ProcCallStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "procedure call statement";
   SPtr<Id> p_id_;
@@ -69,6 +77,8 @@ class ReadStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "read statement";
   SPtr<ReadParams> p_read_params_;
@@ -81,6 +91,8 @@ class WriteStmt : public Stmt {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "write statement";
@@ -96,6 +108,8 @@ class ElifSection : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "else if section";
   SPtr<Expr> p_expr_;
@@ -105,6 +119,8 @@ class ElifSection : public Node {
 class ElifSections : public Nodes {
  public:
   explicit ElifSections(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "else if section list";
@@ -118,6 +134,8 @@ class ElseSection : public Node {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "else section";
@@ -141,6 +159,8 @@ class IfStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "if statement";
   SPtr<Expr> p_expr_;
@@ -158,6 +178,8 @@ class WhileStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "while statement";
   SPtr<Expr> p_expr_;
@@ -172,6 +194,8 @@ class LoopStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "loop statement";
   SPtr<Stmts> p_stmts_;
@@ -184,6 +208,8 @@ class ForStep : public Node {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "for step";
@@ -209,6 +235,8 @@ class ForStmt : public Stmt {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "for statement";
   SPtr<Id> p_id_;
@@ -222,6 +250,8 @@ class ExitStmt : public Stmt {
  public:
   explicit ExitStmt(const yy::location& loc) : Stmt{loc} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "exit statement";
 };
@@ -233,6 +263,8 @@ class ReturnStmt : public Stmt {
 
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "return statement";

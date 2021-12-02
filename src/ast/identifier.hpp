@@ -13,6 +13,8 @@ class Id : public ValueNode {
   explicit Id(const yy::location& loc, const std::string& value)
       : ValueNode{loc, value} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "identifier";
 };
@@ -20,6 +22,8 @@ class Id : public ValueNode {
 class Ids : public Nodes {
  public:
   explicit Ids(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "identifier list";

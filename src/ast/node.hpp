@@ -15,6 +15,7 @@ class Node {
   virtual void UpdateDepth(int depth);
   virtual void Print(std::ostream& os) const;
 
+  virtual std::string name() const { return name_; }
   yy::location loc() const { return loc_; }
   void set_loc(const yy::location& loc) { loc_ = loc; }
   void set_depth(int depth) { depth_ = depth; }
@@ -36,6 +37,8 @@ class ValueNode : public Node {
       : Node{loc}, value_{value} {}
 
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
   virtual std::string value() const { return value_; }
 
  private:
@@ -51,6 +54,8 @@ class Nodes : public Node {
   void InsertArray(SPtr<Nodes> p_nodes);
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "nodes";

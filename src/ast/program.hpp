@@ -17,6 +17,8 @@ class Program : public Node {
   void UpdateDepth(int depth) override;
   void Print(std::ostream& os) const override;
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "program";
   SPtr<Body> p_body_;

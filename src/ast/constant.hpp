@@ -19,6 +19,8 @@ class Constant : public Node {
     PrintBase(os);
     os << " " << value() << "\n";
   }
+
+  std::string name() const override { return name_; }
   virtual T value() const { return value_; }
 
  private:
@@ -31,6 +33,8 @@ class Integer : public Constant<int32_t> {
   explicit Integer(const yy::location& loc, int32_t value)
       : Constant{loc, value} {}
 
+  std::string name() const override { return name_; }
+
  private:
   const std::string name_ = "integer";
 };
@@ -38,6 +42,8 @@ class Integer : public Constant<int32_t> {
 class Real : public Constant<double> {
  public:
   explicit Real(const yy::location& loc, double value) : Constant{loc, value} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "real";
@@ -51,6 +57,8 @@ class Number : public ValueNode {
       : ValueNode{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
+
+  std::string name() const override { return name_; }
   std::string value() const override;
 
  private:
@@ -62,6 +70,8 @@ class String : public Constant<std::string> {
  public:
   explicit String(const yy::location& loc, const std::string& value)
       : Constant{loc, value} {}
+
+  std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "string";
