@@ -1,7 +1,6 @@
 #include "constant.hpp"
 
 #include <iostream>
-#include <string>
 
 #include "../base/common.hpp"
 
@@ -9,7 +8,16 @@ void Number::UpdateDepth(int depth) {
   ValueNode::UpdateDepth(depth);
   auto visitor = Overloaded{
       [depth](auto&& p) {
-        if (p) p->UpdateDepth(depth + 1);
+        if (p) p->UpdateDepth(depth);
+      },
+  };
+  std::visit(visitor, p_number_);
+}
+
+void Number::Print(std::ostream& os) const {
+  auto visitor = Overloaded{
+      [&os](auto&& p) {
+        if (p) p->Print(os);
       },
   };
   std::visit(visitor, p_number_);
@@ -18,7 +26,7 @@ void Number::UpdateDepth(int depth) {
 std::string Number::value() const {
   auto visitor = Overloaded{
       [](const auto& p) {
-        auto value = p ? std::to_string(p->value()) : "";
+        auto value = p ? p->value() : "";
         return value;
       },
   };

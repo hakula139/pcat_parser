@@ -28,9 +28,9 @@ class Constant : public Node {
   const T value_;
 };
 
-class Integer : public Constant<int32_t> {
+class Integer : public Constant<std::string> {
  public:
-  explicit Integer(const yy::location& loc, int32_t value)
+  explicit Integer(const yy::location& loc, const std::string& value)
       : Constant{loc, value} {}
 
   std::string name() const override { return name_; }
@@ -39,9 +39,10 @@ class Integer : public Constant<int32_t> {
   const std::string name_ = "integer";
 };
 
-class Real : public Constant<double> {
+class Real : public Constant<std::string> {
  public:
-  explicit Real(const yy::location& loc, double value) : Constant{loc, value} {}
+  explicit Real(const yy::location& loc, const std::string& value)
+      : Constant{loc, value} {}
 
   std::string name() const override { return name_; }
 
@@ -57,6 +58,7 @@ class Number : public ValueNode {
       : ValueNode{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;

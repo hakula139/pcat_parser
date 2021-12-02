@@ -15,7 +15,7 @@ void Node::PrintIndent(std::ostream& os) const {
 }
 
 void Node::PrintLocation(std::ostream& os) const {
-  os << "@ <" << loc_.begin.line << ":" << loc_.begin.column << "-"
+  os << "<" << loc_.begin.line << ":" << loc_.begin.column << "-"
      << loc_.end.line << ":" << loc_.end.column << ">";
 }
 

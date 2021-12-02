@@ -83,18 +83,15 @@ COMMENTS_END          "*)"
 
 symbol_type make_INTEGER(const std::string& s, const location_type& loc) {
   try {
-    return yy::Parser::make_INTEGER(std::stoi(s), loc);
+    std::stoi(s);
   } catch (const std::out_of_range& e) {
     throw yy::Parser::syntax_error(loc, "RangeError: out of range: " + s);
   }
+  return yy::Parser::make_INTEGER(s, loc);
 }
 
 symbol_type make_REAL(const std::string& s, const location_type& loc) {
-  try {
-    return yy::Parser::make_INTEGER(std::stod(s), loc);
-  } catch (const std::out_of_range& e) {
-    throw yy::Parser::syntax_error(loc, "RangeError: out of range: " + s);
-  }
+  return yy::Parser::make_REAL(s, loc);
 }
 
 symbol_type make_STRING(const std::string& s, const location_type& loc) {

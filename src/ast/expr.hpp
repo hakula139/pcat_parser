@@ -42,6 +42,7 @@ class NumberExpr : public Expr {
       : Expr{loc}, p_number_{p_number} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -57,6 +58,7 @@ class LvalueExpr : public Expr {
       : Expr{loc}, p_lvalue_{p_lvalue} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -72,6 +74,7 @@ class ParenExpr : public Expr {
       : Expr{loc}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -87,6 +90,7 @@ class UnaryExpr : public Expr {
       : Expr{loc}, p_op_{p_op}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -107,6 +111,7 @@ class BinaryExpr : public Expr {
       : Expr{loc}, p_expr1_{p_expr1}, p_op_{p_op}, p_expr2_{p_expr2} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -129,6 +134,7 @@ class ProcCallExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_actual_params_{p_actual_params} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -145,6 +151,7 @@ class AssignExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_expr_{p_expr} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -188,6 +195,7 @@ class RecordConstrExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_comp_values_{p_comp_values} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -205,6 +213,7 @@ class ArrayExpr : public Expr {
       : Expr{loc}, p_value_{p_value}, p_num_{p_num} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -248,6 +257,7 @@ class ArrayConstrExpr : public Expr {
       : Expr{loc}, p_id_{p_id}, p_array_values_{p_array_values} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;
@@ -266,6 +276,7 @@ class WriteExpr : public Expr {
       : Expr{loc}, p_write_expr_{p_write_expr} {}
 
   void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
 
   std::string name() const override { return name_; }
   std::string value() const override;

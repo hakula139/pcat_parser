@@ -117,8 +117,8 @@ int yyFlexLexer::yylex() {
   <std::string>       BACKSLASH           "\\"
 
   // Constants
-  <int32_t>           INTEGER             "integer"
-  <double>            REAL                "real"
+  <std::string>       INTEGER             "integer"
+  <std::string>       REAL                "real"
   <std::string>       STRING              "string"
 
   // Identifiers
