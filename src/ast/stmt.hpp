@@ -30,7 +30,6 @@ class Stmts : public Nodes {
 
  private:
   const std::string name_ = "statement list";
-  std::vector<SPtr<Stmt>> data_;
 };
 
 class AssignStmt : public Stmt {
@@ -124,7 +123,6 @@ class ElifSections : public Nodes {
 
  private:
   const std::string name_ = "else if section list";
-  std::vector<SPtr<ElifSection>> data_;
 };
 
 class ElseSection : public Node {

@@ -30,7 +30,6 @@ class Params : public Nodes {
 
  private:
   const std::string name_ = "parameter list";
-  std::vector<SPtr<Param>> data_;
 };
 
 class FormalParam : public Param {
@@ -58,7 +57,6 @@ class FormalParams : public Params {
 
  private:
   const std::string name_ = "formal parameter list";
-  std::vector<SPtr<FormalParam>> data_;
 };
 
 class ActualParams : public Exprs {

@@ -28,7 +28,6 @@ class Lvalues : public Nodes {
 
  private:
   const std::string name_ = "lvalue list";
-  std::vector<SPtr<Lvalue>> data_;
 };
 
 class IdLvalue : public Lvalue {

@@ -27,7 +27,6 @@ class Ids : public Nodes {
 
  private:
   const std::string name_ = "identifier list";
-  std::vector<SPtr<Id>> data_;
 };
 
 #endif  // SRC_AST_IDENTIFIER_HPP_

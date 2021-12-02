@@ -33,7 +33,6 @@ class Exprs : public Nodes {
 
  private:
   const std::string name_ = "expression list";
-  std::vector<SPtr<Expr>> data_;
 };
 
 class NumberExpr : public Expr {
@@ -162,15 +161,14 @@ class AssignExpr : public Expr {
   SPtr<Expr> p_expr_;
 };
 
-class AssignExprs : public Nodes {
+class AssignExprs : public Exprs {
  public:
-  explicit AssignExprs(const yy::location& loc) : Nodes{loc} {}
+  explicit AssignExprs(const yy::location& loc) : Exprs{loc} {}
 
   std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "assign expression list";
-  std::vector<SPtr<AssignExpr>> data_;
 };
 
 class CompValues : public Node {
@@ -224,15 +222,14 @@ class ArrayExpr : public Expr {
   SPtr<Expr> p_num_;
 };
 
-class ArrayExprs : public Nodes {
+class ArrayExprs : public Exprs {
  public:
-  explicit ArrayExprs(const yy::location& loc) : Nodes{loc} {}
+  explicit ArrayExprs(const yy::location& loc) : Exprs{loc} {}
 
   std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "array expression list";
-  std::vector<SPtr<ArrayExpr>> data_;
 };
 
 class ArrayValues : public Node {
@@ -286,15 +283,14 @@ class WriteExpr : public Expr {
   UnionPtr p_write_expr_;
 };
 
-class WriteExprs : public Nodes {
+class WriteExprs : public Exprs {
  public:
-  explicit WriteExprs(const yy::location& loc) : Nodes{loc} {}
+  explicit WriteExprs(const yy::location& loc) : Exprs{loc} {}
 
   std::string name() const override { return name_; }
 
  private:
   const std::string name_ = "write expression list";
-  std::vector<SPtr<WriteExpr>> data_;
 };
 
 #endif  // SRC_AST_EXPR_HPP_
