@@ -59,7 +59,8 @@ COMMENTS_END          "*)"
 %}
 
 <INITIAL><<EOF>>              { return yy::Parser::make_YYEOF(loc); }
-<INITIAL>({WS}|{NEWLINE})     /* skip whitespaces */
+<INITIAL>{WS}                 /* skip whitespaces */
+<INITIAL>{NEWLINE}            { loc.lines(); }
 
 <INITIAL>{INTEGER}            { return make_INTEGER(YYText(), loc); }
 <INITIAL>{REAL}               { return make_REAL(YYText(), loc); }
@@ -72,7 +73,8 @@ COMMENTS_END          "*)"
 
 <INITIAL>{COMMENTS_BEGIN}     { BEGIN(COMMENT); skip_COMMENTS(YYText(), loc); }
 <COMMENT>{COMMENTS_END}       { BEGIN(INITIAL); skip_COMMENTS(YYText(), loc); }
-<COMMENT>(.|{NEWLINE})        { skip_COMMENTS(YYText(), loc); }
+<COMMENT>.                    { skip_COMMENTS(YYText(), loc); }
+<COMMENT>{NEWLINE}            { loc.lines(); skip_COMMENTS(YYText(), loc); }
 <COMMENT><<EOF>>              { skip_COMMENTS("", loc); }
 
 <INITIAL>.                    { panic_UNKNOWN_CHAR(YYText(), loc); }

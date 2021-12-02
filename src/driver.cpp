@@ -12,12 +12,15 @@ Driver::Driver() : lexer_{this}, parser_{&lexer_, this} {
 }
 
 int Driver::Parse(const std::string& in_path, const std::string& out_path) {
-  loc_.initialize(&in_path);
+  loc_.initialize();
   auto p_ifs = std::make_unique<std::ifstream>(in_path);
   auto p_ofs = std::make_unique<std::ofstream>(out_path);
   lexer_.switch_streams(*p_ifs, *p_ofs);
+
   int res = parser_();
+
   if (p_program_) {
+    *p_ofs << in_path << "\n\n";
     p_program_->UpdateDepth(0);
     p_program_->Print(*p_ofs);
   }
