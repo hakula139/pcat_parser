@@ -49,8 +49,10 @@ void Nodes::UpdateDepth(int depth) {
 }
 
 void Nodes::Print(std::ostream& os) const {
-  Node::Print(os);
-  for (const auto& p_node : data_) {
-    if (p_node) p_node->Print(os);
+  if (data_.size()) {
+    Node::Print(os);
+    for (const auto& p_node : data_) {
+      if (p_node) p_node->Print(os);
+    }
   }
 }
