@@ -31,13 +31,17 @@ void ValueNode::Print(std::ostream& os) const {
 }
 
 void Nodes::Insert(SPtr<Node> p_node) {
-  set_loc(loc() + p_node->loc());
-  data_.push_back(p_node);
+  if (p_node) {
+    set_loc(loc() + p_node->loc());
+    data_.push_back(p_node);
+  }
 }
 
 void Nodes::InsertArray(SPtr<Nodes> p_nodes) {
-  for (auto&& p_node : p_nodes->data_) {
-    Insert(p_node);
+  if (p_nodes) {
+    for (auto&& p_node : p_nodes->data_) {
+      Insert(p_node);
+    }
   }
 }
 

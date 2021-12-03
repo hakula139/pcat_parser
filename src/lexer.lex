@@ -85,7 +85,7 @@ symbol_type make_INTEGER(const std::string& s, const location_type& loc) {
   try {
     std::stoi(s);
   } catch (const std::out_of_range& e) {
-    throw yy::Parser::syntax_error(loc, "RangeError: out of range: " + s);
+    throw yy::Parser::syntax_error(loc, "range error, integer out of range: " + s);
   }
   return yy::Parser::make_INTEGER(s, loc);
 }
@@ -97,12 +97,12 @@ symbol_type make_REAL(const std::string& s, const location_type& loc) {
 symbol_type make_STRING(const std::string& s, const location_type& loc) {
   if (s.size() > 257) {
     throw yy::Parser::syntax_error(
-        loc, "ValueError: string literal is too long: " + s);
+        loc, "value error, string literal is too long: " + s);
   }
 
   if (s.find('\t') != std::string::npos) {
     throw yy::Parser::syntax_error(
-        loc, "ValueError: invalid character found in string: " + s);
+        loc, "value error, invalid character found in string: " + s);
   }
 
   return yy::Parser::make_STRING(s, loc);
@@ -110,7 +110,7 @@ symbol_type make_STRING(const std::string& s, const location_type& loc) {
 
 void panic_UNTERM_STRING(const std::string& s, const location_type& loc) {
   throw yy::Parser::syntax_error(
-      loc, "SyntaxError: unterminated string literal: " + s);
+      loc, "syntax error, unterminated string literal: " + s);
 }
 
 static const MakeTable make_keyword_table{
@@ -150,7 +150,7 @@ static const MakeTable make_keyword_table{
 symbol_type make_ID(const std::string& s, const location_type& loc) {
   if (s.size() > 255) {
     throw yy::Parser::syntax_error(
-        loc, "CompileError: identifier is too long: " + s);
+        loc, "compile error, identifier is too long: " + s);
   }
 
   auto entry = make_keyword_table.find(s);
@@ -211,10 +211,10 @@ void skip_COMMENTS(const std::string& s, const location_type& loc) {
     comments_loc += loc;
   } else {
     throw yy::Parser::syntax_error(
-        comments_loc, "SyntaxError: unterminated comments: " + comments_buf);
+        comments_loc, "syntax error, unterminated comments: " + comments_buf);
   }
 }
 
 void panic_UNKNOWN_CHAR(const std::string& s, const location_type& loc) {
-  throw yy::Parser::syntax_error(loc, "CompileError: unknown character: " + s);
+  throw yy::Parser::syntax_error(loc, "compile error, unknown character: " + s);
 }

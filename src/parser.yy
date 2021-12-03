@@ -196,7 +196,12 @@ program:
     $$ = make_shared<Program>(@$, $body);
     p_driver->set_program($$);
   }
-| error SEMICOLON { yyerrok; }
+| error body SEMICOLON {
+    $$ = make_shared<Program>(@$, $body);
+    p_driver->set_program($$);
+    yyerrok;
+  }
+| error { $$ = nullptr; yyerrok; yyclearin; }
 ;
 
 body:
@@ -225,6 +230,7 @@ var_decl:
   ids type_annot ASSIGN expr SEMICOLON {
     $$ = make_shared<VarDecl>(@$, $ids, $type_annot, $expr);
   }
+| error SEMICOLON { $$ = nullptr; yyerrok; }
 ;
 
 type_decls:
@@ -234,6 +240,7 @@ type_decls:
 
 type_decl:
   id IS type SEMICOLON { $$ = make_shared<TypeDecl>(@$, $id, $type); }
+| error SEMICOLON { $$ = nullptr; yyerrok; }
 ;
 
 proc_decls:
@@ -244,6 +251,10 @@ proc_decls:
 proc_decl:
   id LPAREN formal_params RPAREN type_annot IS body SEMICOLON {
     $$ = make_shared<ProcDecl>(@$, $id, $formal_params, $type_annot, $body);
+  }
+| id LPAREN formal_params RPAREN type_annot error body SEMICOLON {
+    $$ = make_shared<ProcDecl>(@$, $id, $formal_params, $type_annot, $body);
+    yyerrok;
   }
 ;
 
@@ -275,6 +286,7 @@ components:
 
 component:
   id COLON type SEMICOLON { $$ = make_shared<Component>(@$, $id, $type); }
+| error SEMICOLON { $$ = nullptr; yyerrok; }
 ;
 
 ids:
@@ -327,6 +339,7 @@ stmt:
 | RETURN expr SEMICOLON {
     $$ = make_shared<ReturnStmt>(@$, $expr);
   }
+| error SEMICOLON { $$ = nullptr; yyerrok; }
 ;
 
 actual_params:
