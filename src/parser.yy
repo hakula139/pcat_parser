@@ -196,6 +196,7 @@ program:
     $$ = make_shared<Program>(@$, $body);
     p_driver->set_program($$);
   }
+| error SEMICOLON { yyerrok; }
 ;
 
 body:

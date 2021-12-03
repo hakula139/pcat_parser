@@ -75,7 +75,7 @@ COMMENTS_END          "*)"
 <COMMENT>{COMMENTS_END}       { BEGIN(INITIAL); skip_COMMENTS(YYText(), loc); }
 <COMMENT>.                    { skip_COMMENTS(YYText(), loc); }
 <COMMENT>{NEWLINE}            { loc.lines(); skip_COMMENTS(YYText(), loc); }
-<COMMENT><<EOF>>              { skip_COMMENTS("", loc); }
+<COMMENT><<EOF>>              { BEGIN(INITIAL); skip_COMMENTS("", loc); }
 
 <INITIAL>.                    { panic_UNKNOWN_CHAR(YYText(), loc); }
 
@@ -211,7 +211,7 @@ void skip_COMMENTS(const std::string& s, const location_type& loc) {
     comments_loc += loc;
   } else {
     throw yy::Parser::syntax_error(
-        comments_loc, "SyntaxError: unterminated comments: " + s);
+        comments_loc, "SyntaxError: unterminated comments: " + comments_buf);
   }
 }
 
