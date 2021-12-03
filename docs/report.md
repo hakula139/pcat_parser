@@ -2,7 +2,7 @@
 
 [![wakatime](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/fb1abada-88bc-4df7-a81d-c7bb1af6fdfc.svg)](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/fb1abada-88bc-4df7-a81d-c7bb1af6fdfc)
 
-本项目利用 Bison 和 Flex，实现了对给定 PCAT 语言样例的语法分析。
+本项目利用 Bison 和 Flex，实现了对给定 PCAT 语言样例的语法分析，使用 C++17 编写。
 
 ## 目录
 
@@ -15,6 +15,8 @@
       - [2.2 构建与运行](#22-构建与运行)
       - [2.3 测试](#23-测试)
     - [3. Makefile 文件说明](#3-makefile-文件说明)
+    - [4. Bison 使用方法](#4-bison-使用方法)
+      - [4.1 Prologue](#41-prologue)
   - [贡献者](#贡献者)
   - [许可协议](#许可协议)
   
@@ -268,6 +270,71 @@ clean:
 	@$(RM) $(BIN_DIR) $(BUILD_DIR) $(LEX_SRC) $(YACC_SRC) $(YACC_H)
 ```
 
+### 4. Bison 使用方法
+
+以下主要参考 Bison 的官方文档。[^1]
+
+Bison 文件的结构和 Flex 文件类似，总体分为四个部分：
+
+- Prologue：定义了一些 Bison 头文件和源文件中需要使用的函数和变量，一般通过 `#include` 外部宏的方式实现
+- Bison declarations：声明了所有终结符和非终结符以及它们语义值的类型，同时指定了一些操作符的优先级；此外这里也包含了 Bison 的各种设置
+- Grammar rules：定义了语法分析的具体规则，即每个非终结符有哪些产生式，匹配到相应产生式时需要执行什么动作等等
+- Epilogue：用户可以在这里定义一些辅助函数，此部分代码会被直接复制到 `src/parser.cpp` 里
+
+```cpp {.line-numbers}
+%{
+// Prologue
+%}
+
+// Bison declarations
+
+%%
+// Grammar rules
+%%
+
+// Epilogue
+```
+
+其中，Prologue 部分也可以有其他一些替代形式。本项目中利用到的为如下两种：
+
+```cpp {.line-numbers}
+%code requires {
+// Prologue
+}
+```
+
+此部分代码将被直接复制到 `src/parser.hpp` 的头部，往往包含在语法分析器的头文件里就需要用到的声明，例如所有终结符和非终结符的类型声明。
+
+```cpp {.line-numbers}
+%code top {
+// Prologue
+}
+```
+
+此部分代码将被直接复制到 `src/parser.cpp` 的头部，包含语法分析器的实现里需要用到的声明。
+
+下面我们展开讲讲本项目中这四个部分的具体内容。
+
+#### 4.1 Prologue
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+%code requires {
+#include <string>
+
+#include "ast/index.hpp"
+#include "base/common.hpp"
+
+class Driver;
+namespace yy {
+  class Lexer;
+}
+}
+```
+
+我们首先在语法分析器的头文件里 include 了 `<string>` 和 `ast/index.hpp`，前者是所有终结符的语义值类型 `std::string`，后者声明了所有非终结符的语义值类型（AST 节点）。随后我们 include 了 `base/common.hpp`，这里主要是用到了其中对 `std::shared_ptr` 的缩写 `SPtr`，之后我会解释为什么我使用 `std::shared_ptr` 而不是 `std::unique_ptr` 或者普通指针，这里有很多大坑。
+
 ## 贡献者
 
 - [**Hakula Chen**](https://github.com/hakula139)<[i@hakula.xyz](mailto:i@hakula.xyz)> - 复旦大学
@@ -276,6 +343,5 @@ clean:
 
 本项目遵循 MIT 许可协议，详情参见 [LICENSE](../LICENSE) 文件。
 
-[^1]: [Flex - a scanner generator - Format](https://ftp.gnu.org/old-gnu/Manuals/flex-2.5.4/html_node/flex_6.html)  
+[^1]: [C++ Parsers (Bison 3.8.1)](https://www.gnu.org/software/bison/manual/html_node)  
 [^2]: [The PCAT Programming Language Reference Manual](http://web.cecs.pdx.edu/~harry/compilers/PCATLangSpec.pdf)  
-[^3]: [Using flex, how can I keep yytext contents when EOF is reached and input is provided via YY_INPUT? - Stack Overflow](https://stackoverflow.com/questions/14418560/using-flex-how-can-i-keep-yytext-contents-when-eof-is-reached-and-input-is-prov)  
