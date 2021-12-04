@@ -5,9 +5,9 @@
 
 %define api.location.file "location.hpp"
 %define api.parser.class {Parser}
-%define api.token.raw
 %define api.token.constructor
 %define api.token.prefix {T_}
+%define api.token.raw
 %define api.value.type variant
 
 %define parse.assert
