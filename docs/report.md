@@ -18,6 +18,8 @@
     - [4. Bison 使用方法](#4-bison-使用方法)
       - [4.1 Prologue](#41-prologue)
       - [4.2 Bison declaration](#42-bison-declaration)
+      - [4.3 Grammar rules](#43-grammar-rules)
+      - [4.4 Epilogue](#44-epilogue)
   - [贡献者](#贡献者)
   - [许可协议](#许可协议)
   
@@ -417,7 +419,7 @@ class Lexer : public yyFlexLexer {
 %define api.value.type variant            // 指定 token 语义值类型为 variant，用于同时支持更广泛的类型，
                                           // 参见 C++17 的 std::variant
 
-%define parse.assert         // 确保 token 被正常构造与析构，以确保上述 variant 类型被正确使用
+%define parse.assert         // 通过运行时检查确保 token 被正常构造与析构，以保证上述 variant 类型被正确使用
 %define parse.trace          // 启用 Debug 功能
 %define parse.error verbose  // 指定报错等级，verbose 级别将对语法分析时遇到的错误进行详细报错
 %define parse.lac full       // 启用 lookahead correction (LAC)，提高对语法错误的处理能力
@@ -569,7 +571,7 @@ class Lexer : public yyFlexLexer {
 
 需要注意的是，我们对终结符 `INTEGER`, `REAL`, `STRING` 还额外封装了三个对应的非终结符，这个主要是为了书写规则时的形式统一，不定义这几个非终结符也是可以的。
 
-此外，我们还需要指定操作符的优先级。从上到下优先级依次升高。这里我们额外定义了两个假的操作符 `POS` 和 `NEG`，分别对应作为单目运算符时的 `PLUS` 和 `MINUS`。这个假操作符占位操作将在之后显式指定优先级时利用到。
+此外，我们还需要指定操作符的优先级和结合性。从上到下表示优先级依次提高；`%left`, `%right`, `%nonassoc` 分别表示左结合、右结合和非结合。这里我们额外定义了两个假的操作符 `POS` 和 `NEG`，分别对应作为单目运算符时的 `PLUS` 和 `MINUS`。这个假操作符占位操作将在之后通过 `%prec` 显式指定优先级时利用到。
 
 ```cpp {.line-numbers}
 // src/parser.yy
@@ -581,6 +583,226 @@ class Lexer : public yyFlexLexer {
 %left                 PLUS MINUS;
 %left                 STAR SLASH DIV MOD;
 %right                POS NEG NOT;
+```
+
+#### 4.3 Grammar rules
+
+那么接下来就是定义语法分析的具体规则了，也就是定义所有非终结符的产生式。由于量比较大，但模式很多又完全一致，因此我会针对几个比较有代表性的规则进行详解。
+
+首先讲一下 Bison 里产生规则的格式：
+
+```cpp {.line-numbers}
+result:
+  rule1-components { /* action1 */ }
+| rule2-components { /* action2 */ }
+;
+```
+
+其中 `result` 即为产生的非终结符，`rule1-components` 和 `rule2-components` 表示两种可以产生 `result` 的终结符 / 非终结符组合方式，`action1` 和 `action2` 表示每次匹配到相应产生式时需要执行的动作（C++ 代码）。
+
+下面我们来看一些实例。
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+%start program;
+
+// Programs
+
+program:
+  PROGRAM IS body SEMICOLON {
+    $$ = make_shared<Program>(@$, $body);
+    p_driver->set_program($$);
+  }
+;
+```
+
+首先是我们程序的根结点 `program`。我们知道 `program` 的产生式如下 [^2]：
+
+```cpp {.line-numbers}
+program -> PROGRAM IS body ';'
+```
+
+由于我们已经定义了 `;` 的 token 为 `SEMICOLON`，在产生规则里我们可以用 `SEMICOLON` 代替。
+
+在规则对应的动作里，我们利用 `std::make_shared` 直接构造一个指向 `Program` 类的 `std::shared_ptr`，构造函数传入的参数为 `@$` 和 `$body`，分别表示 `$` 当前的 location 和 `body` 的语义值，其中 `$` 即表示当前非终结符（也就是 `program`）。最后我们将这个指针赋值给 `$$`，也就是 `$` 的语义值。
+
+由于 `$` 是我们的根结点 `program`，因此我们将其保存到 `Driver` 类里。将来我们通过 `Driver` 打印语法树时，这就是我们语法树的根。
+
+之后我会在语法树实现的章节详细讲解这里发生了什么。现在我们只需要知道，每个非终结符 `x` 的语义值就是一个指向这个 AST 节点 `x` 的指针 `$x`。当构造一个节点 `x` 时，需要传入这个节点的位置 `@x` 和其子节点的语义值 `$y`，其中子节点即构成这个非终结符的所有非终结符和有值的终结符（`INTEGER`, `REAL`, `STRING`）。
+
+举个复杂点的例子，比如 `stmt` 的产生规则就是：
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+stmt:
+  lvalue ASSIGN expr SEMICOLON {
+    $$ = make_shared<AssignStmt>(@$, $lvalue, $expr);
+  }
+| id LPAREN actual_params RPAREN SEMICOLON {
+    $$ = make_shared<ProcCallStmt>(@$, $id, $actual_params);
+  }
+| READ LPAREN read_params RPAREN SEMICOLON {
+    $$ = make_shared<ReadStmt>(@$, $read_params);
+  }
+| WRITE LPAREN write_params RPAREN SEMICOLON {
+    $$ = make_shared<WriteStmt>(@$, $write_params);
+  }
+| IF expr THEN stmts elif_sections[elif] else_section[else] END SEMICOLON {
+    $$ = make_shared<IfStmt>(@$, $expr, $stmts, $elif, $else);
+  }
+| WHILE expr DO stmts END SEMICOLON {
+    $$ = make_shared<WhileStmt>(@$, $expr, $stmts);
+  }
+| LOOP stmts END SEMICOLON {
+    $$ = make_shared<LoopStmt>(@$, $stmts);
+  }
+| FOR id ASSIGN expr[begin] TO expr[end] for_step[step] DO stmts END SEMICOLON {
+    $$ = make_shared<ForStmt>(@$, $id, $begin, $end, $step, $stmts);
+  }
+| EXIT SEMICOLON {
+    $$ = make_shared<ExitStmt>(@$);
+  }
+| RETURN SEMICOLON {
+    $$ = make_shared<ReturnStmt>(@$);
+  }
+| RETURN expr SEMICOLON {
+    $$ = make_shared<ReturnStmt>(@$, $expr);
+  }
+;
+```
+
+其中 `nterm[alias]` 表示为 `nterm` 取别名 `alias`。
+
+注意到 `$$` 在不同的产生式里可以有不同的类型，这主要是利用了 C++ 的多态性。我们在实现 AST 时，利用继承实现了多态，例如此处 `AssignStmt`, `ProcCallStmt` 等等都是以 `Stmt` 为基类的派生类，因此其指针可以直接赋值给基类指针，同时不失语义（利用虚函数，基类指针可以调用派生类的函数实现）。
+
+再看一个例子，这个是 `expr` 的产生规则：
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+expr:
+  number { $$ = make_shared<NumberExpr>(@$, $1); }
+| lvalue { $$ = make_shared<LvalueExpr>(@$, $1); }
+| LPAREN expr RPAREN { $$ = make_shared<ParenExpr>(@$, $2); }
+| PLUS expr %prec POS { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| MINUS expr %prec NEG { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| NOT expr { $$ = make_shared<UnaryExpr>(@$, make_shared<Op>(@1, $1), $2); }
+| expr PLUS expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr MINUS expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr STAR expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr SLASH expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr DIV expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr MOD expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr OR expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr AND expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr LT expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr LE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr GT expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr GE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr EQ expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| expr NE expr { $$ = make_shared<BinaryExpr>(@$, $1, make_shared<Op>(@2, $2), $3); }
+| id LPAREN actual_params RPAREN { $$ = make_shared<ProcCallExpr>(@$, $1, $3); }
+| id LCBRAC comp_values RCBRAC { $$ = make_shared<RecordConstrExpr>(@$, $1, $3); }
+| id LSABRAC array_values RSABRAC { $$ = make_shared<ArrayConstrExpr>(@$, $1, $3); }
+;
+```
+
+首先可以注意到，我们也可以用 `$1`, `$2` 来表示产生式右侧的第 1, 2 个符号。
+
+这里为什么不能将 `UnaryExpr` 或 `BinaryExpr` 的产生式合并成一个 `op expr` 和 `expr op expr` 呢？是因为我们需要利用操作符 `op` 的优先级和结合性。如果我们将 `op` 提取出来，在产生式里仅留下一个非操作符 `op`，Bison 将无法利用终结符的优先级和结合性信息，从而导致错误的语法分析结果。
+
+式中，`PLUS expr %prec POS` 即表示对此式采用 `POS` 的优先级。前面我们看到，`POS` 的优先级和 `NOT` 同级，通过这种方式我们就实现了对 `PLUS` 作为单目运算符时优先级的重定义。
+
+除了这种单个节点的构造方式外，我们还存在另一种数组节点的构造方式。
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+elif_sections:
+  %empty { $$ = make_shared<ElifSections>(@$); }
+| elif_sections elif_section { $$ = $1; if ($$) $$->Insert($2); }
+;
+```
+
+`elif_sections` 的产生式如下：
+
+```cpp {.line-numbers}
+elif_sections -> {elif_section}
+```
+
+表示 `elif_sections` 由多个 `elif_section` 构成。
+
+在 Bison 的产生规则中，我们通过一种递归的方式来描述这个产生式。作为递归的退出条件，空产生式可以用 `%empty` 表示，其对应的动作是新建一个 `ElifSections` 对象。在 AST 节点的实现中，其本质是一个 `std::vector<std::shared_ptr<ElifSection>>`，也就是一个子节点指针的数组。之后每多分析到一个 `elif_section`，就往这个数组里插一个子节点指针，并更新此节点的 location。这里 `Insert()` 函数会同时完成这两件事情。
+
+此外，我们还提供了 `InsertArray()` 函数，用于转移另一个数组节点 `y` 的所有子节点到数组节点 `x`。适用于语义上不应当将 `y` 作为 `x` 的子节点的情形。例如：
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+decls:
+  %empty { $$ = make_shared<Decls>(@$); }
+| decls decl { $$ = $1; if ($$) $$->InsertArray($2); }
+;
+
+decl:
+  VAR var_decls { $$ = $2; if ($$) $$->set_loc(@$); }
+| PROCEDURE proc_decls { $$ = $2; if ($$) $$->set_loc(@$); }
+| TYPE type_decls { $$ = $2; if ($$) $$->set_loc(@$); }
+;
+```
+
+这里 `$$->set_loc(@$)` 的作用即更新一下当前节点的 location。需要注意的是，这里 `decls` 和 `decl` 的语义值类型均为 `std::shared_ptr<Decls>`。
+
+其他规则基本上就大同小异了，不在这里赘述。具体代码可以参见 [src/parser.yy](../src/parser.yy)。
+
+#### 4.4 Epilogue
+
+最后我们在 Epilogue 给出了函数 `yy::Parser::error()` 的实现，用于语法分析器的报错。
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+void yy::Parser::error(const location_type& loc, const std::string& msg) {
+  Logger::Error(msg, &loc);
+}
+```
+
+流程上，当 Lexer 或 Parser 遇到词法错误或语法错误时，就会抛出一个 `std::syntax_error` 异常。程序捕获这个异常后，就会调用函数 `yy::Parser::error()`，然后调用函数 `Logger::Error()`，并传入参数 `loc` 和 `msg`，分别对应错误发生的位置和错误信息。
+
+函数 `Logger::Error()` 的实现很简单，其实就是对 `operator<<()` 的一个封装。
+
+```cpp {.line-numbers}
+// src/utils/logger.cpp
+
+void Logger::Log(
+    const std::string& msg, const yy::location* p_loc, std::ostream& os) {
+  if (p_loc) {
+    auto loc = *p_loc;
+    os << loc.begin.line << ":" << loc.begin.column << "-" << loc.end.line
+       << ":" << loc.end.column << ": ";
+  }
+  os << msg << RESET << "\n";
+}
+
+void Logger::Error(
+    const std::string& msg, const yy::location* p_loc, std::ostream& os) {
+  if (LOG_LEVEL <= ERROR) {
+    os << RED << "[ERROR] ";
+    Log(msg, p_loc, os);
+  }
+}
+```
+
+这里利用 ANSI 字符颜色转义序列美化了下日志输出，给报错信息加了个颜色。
+
+```cpp {.line-numbers}
+// src/base/common.cpp
+
+// ANSI colors
+#define RED "\e[0;31m"
+#define RESET "\e[0;0m"
 ```
 
 ## 贡献者
