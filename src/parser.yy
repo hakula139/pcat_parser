@@ -3,14 +3,14 @@
 %header "src/parser.hpp"
 %locations
 
-%define api.parser.class {Parser}
 %define api.location.file "location.hpp"
-
+%define api.parser.class {Parser}
 %define api.token.raw
 %define api.token.constructor
+%define api.token.prefix {T_}
 %define api.value.type variant
-%define parse.assert
 
+%define parse.assert
 %define parse.trace
 %define parse.error verbose
 %define parse.lac full
@@ -53,7 +53,6 @@ int yyFlexLexer::yylex() {
 }
 }
 
-%define api.token.prefix {T_}
 %token
   // Reserved keywords
   <std::string>       AND
