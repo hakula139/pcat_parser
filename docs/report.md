@@ -141,7 +141,8 @@ END;
 就将得到这样的输出：
 
 ```text {.line-numbers}
-tests/case_1.pcat
+# tests/case_1.pcat
+
 
 program <1:1-8:5>
   body <1:11-8:4>

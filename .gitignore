@@ -1,6 +1,7 @@
 ## Customized
 
 .vscode/
+.DS_STORE
 bin/
 build/
 lib/*
