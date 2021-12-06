@@ -2,7 +2,7 @@
 
 [![wakatime](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/fb1abada-88bc-4df7-a81d-c7bb1af6fdfc.svg)](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/fb1abada-88bc-4df7-a81d-c7bb1af6fdfc)
 
-A toy parser for the PCAT language.
+A toy parser for the PCAT language, built with Bison & Flex, written in C++17.
 
 [中文报告](./docs/report.md)
 
