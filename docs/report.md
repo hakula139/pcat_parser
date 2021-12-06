@@ -776,6 +776,7 @@ decl:
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) {
   Logger::Error(msg, &loc);
+  Logger::Error(msg, &loc, p_driver->ofs());
 }
 ```
 
@@ -793,13 +794,16 @@ void Logger::Log(
     os << loc.begin.line << ":" << loc.begin.column << "-" << loc.end.line
        << ":" << loc.end.column << ": ";
   }
-  os << msg << RESET << "\n";
+  os << msg;
+  if (&os == &std::cout) os << RESET;
+  os << "\n";
 }
 
 void Logger::Error(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= ERROR) {
-    os << RED << "[ERROR] ";
+    if (&os == &std::cout) os << RED;
+    os << "[ERROR] ";
     Log(msg, p_loc, os);
   }
 }

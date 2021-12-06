@@ -475,4 +475,5 @@ array_values:
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) {
   Logger::Error(msg, &loc);
+  Logger::Error(msg, &loc, p_driver->ofs());
 }

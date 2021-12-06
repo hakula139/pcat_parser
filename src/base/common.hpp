@@ -1,7 +1,7 @@
 #ifndef SRC_BASE_COMMON_HPP_
 #define SRC_BASE_COMMON_HPP_
 
-#include <memory>  // std::shared_ptr
+#include <memory>  // std::unique_ptr, std::shared_ptr
 
 // ANSI colors
 #define RED "\e[0;31m"
@@ -20,6 +20,9 @@ enum LogLevel {
   ERROR,
   FATAL,
 };
+
+template <class T>
+using UPtr = typename std::unique_ptr<T>;
 
 template <class T>
 using SPtr = typename std::shared_ptr<T>;

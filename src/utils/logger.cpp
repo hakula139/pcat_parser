@@ -14,13 +14,16 @@ void Logger::Log(
     os << loc.begin.line << ":" << loc.begin.column << "-" << loc.end.line
        << ":" << loc.end.column << ": ";
   }
-  os << msg << RESET << "\n";
+  os << msg;
+  if (&os == &std::cout) os << RESET;
+  os << "\n";
 }
 
 void Logger::Trace(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= TRACE) {
-    os << CYAN << "[TRACE] ";
+    if (&os == &std::cout) os << CYAN;
+    os << "[TRACE] ";
     Log(msg, p_loc, os);
   }
 }
@@ -28,7 +31,8 @@ void Logger::Trace(
 void Logger::Debug(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= DEBUG) {
-    os << GREEN << "[DEBUG] ";
+    if (&os == &std::cout) os << GREEN;
+    os << "[DEBUG] ";
     Log(msg, p_loc, os);
   }
 }
@@ -36,7 +40,8 @@ void Logger::Debug(
 void Logger::Info(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= INFO) {
-    os << BLUE << "[INFO ] ";
+    if (&os == &std::cout) os << BLUE;
+    os << "[INFO ] ";
     Log(msg, p_loc, os);
   }
 }
@@ -44,7 +49,8 @@ void Logger::Info(
 void Logger::Warn(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= WARN) {
-    os << YELLOW << "[WARN ] ";
+    if (&os == &std::cout) os << YELLOW;
+    os << "[WARN ] ";
     Log(msg, p_loc, os);
   }
 }
@@ -52,7 +58,8 @@ void Logger::Warn(
 void Logger::Error(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= ERROR) {
-    os << RED << "[ERROR] ";
+    if (&os == &std::cout) os << RED;
+    os << "[ERROR] ";
     Log(msg, p_loc, os);
   }
 }
@@ -60,7 +67,8 @@ void Logger::Error(
 void Logger::Fatal(
     const std::string& msg, const yy::location* p_loc, std::ostream& os) {
   if (LOG_LEVEL <= FATAL) {
-    os << PURPLE << "[FATAL] ";
+    if (&os == &std::cout) os << PURPLE;
+    os << "[FATAL] ";
     Log(msg, p_loc, os);
   }
 }
