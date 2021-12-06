@@ -942,7 +942,7 @@ program:
 
 这里，`error body SEMICOLON` 将语法错误视作一个 token（`error`）。通过这样的产生式可以让程序检测到错误后，能继续对后续输入进行语法分析（相当于假装这里没有发生错误）。例如这里就是尝试按照 `body SEMICOLON` 分析之后的输入。
 
-动作里的 `yyerrok` 表示立即报错，并继续进行语法分析。继续分析时，程序默认会重新分析这次读入的 lookahead token，但有时这会导致程序出现死循环，`yyclearin` 的作用就是丢弃这个 token，直接读取下一个 token，从而避免这种情形。这里 `error { $$ = nullptr; yyerrok; yyclearin; }` 语句就是之前提到的对 `tests/case_11.pcat` 的特判。
+动作里的 `yyerrok` 表示立即报错，并继续进行语法分析。继续分析时，程序默认会重新分析这次读入的 lookahead token，但有时这会导致程序出现死循环，`yyclearin` 的作用就是丢弃这个 token，直接读取下一个 token，从而避免这种情形。这里 `error { $$ = nullptr; yyerrok; yyclearin; }` 就是之前提到的对 `tests/case_11.pcat` 的特判。
 
 ```cpp {.line-numbers}
 // src/parser.yy
@@ -956,6 +956,28 @@ var_decl:
 ```
 
 像这个错误恢复逻辑就很典型，就是当一条 `var_decl` 语句的结尾少一个分号时，舍弃接下来所有的 token，直到读到分号为止。读到分号后，错误恢复，继续进行接下来的语法分析。通常情况下，这样可以将一次错误造成的影响限制在尽量小的范围。
+
+一些报错信息的样例展示（`tests/case_11.pcat`），其中第一行是语法错误，其余行是词法错误：
+
+<style>
+.text-red {
+  color: red;
+}
+</style>
+
+```text {.text-red}
+[ERROR] 2:1-2:9: syntax error, unexpected integer, expecting PROGRAM
+[ERROR] 5:1-5:21: range error, integer out of range: 11111111111111111111
+[ERROR] 14:1-14:10: value error, invalid character found in string: "abcde      g"
+[ERROR] 17:1-17:12: value error, invalid character found in string: "abcde                      g"
+[ERROR] 23:1-23:259: value error, string literal is too long: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"
+[ERROR] 35:1-35:257: compile error, identifier is too long: x123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345
+[ERROR] 44:1-44:2: compile error, unknown character: 
+[ERROR] 50:1-50:5: syntax error, unterminated string literal: "abc
+[ERROR] 53:1-53:9: syntax error, unterminated string literal: "abc(**)
+[ERROR] 56:1-56:12: syntax error, unterminated string literal: "abc(*123*)
+[ERROR] 74:1-74:11: syntax error, unterminated comments: (****123**
+```
 
 ## 贡献者
 
