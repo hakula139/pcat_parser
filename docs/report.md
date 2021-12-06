@@ -24,6 +24,12 @@
     - [6. 错误检测与报错](#6-错误检测与报错)
       - [6.1 词法错误](#61-词法错误)
       - [6.2 语法错误](#62-语法错误)
+    - [7. 语法树实现](#7-语法树实现)
+      - [7.1 Node](#71-node)
+      - [7.2 ValueNode](#72-valuenode)
+      - [7.3 Nodes](#73-nodes)
+      - [7.4 如何继承](#74-如何继承)
+      - [7.5 继承关系](#75-继承关系)
   - [贡献者](#贡献者)
   - [许可协议](#许可协议)
   
@@ -977,6 +983,543 @@ var_decl:
 [ERROR] 53:1-53:9: syntax error, unterminated string literal: "abc(**)
 [ERROR] 56:1-56:12: syntax error, unterminated string literal: "abc(*123*)
 [ERROR] 74:1-74:11: syntax error, unterminated comments: (****123**
+```
+
+### 7. 语法树实现
+
+接下来讲一下抽象语法树（AST）的实现，具体代码实现可以参考 `src/ast` 目录下的文件。
+
+我们将所有节点分为三种类型：节点 `Node`、有值节点 `ValueNode` 和数组节点 `Nodes`。我们先实现了代表节点的基类 `Node`，提供了作为节点的基本成员和方法，然后基于 `Node` 派生出 `ValueNode` 和 `Nodes`，分别提供了作为有值节点和数组节点的额外成员和方法。所有其他类型的节点最终都继承自这两种节点。
+
+继承关系：
+
+```cpp {.line-numbers}
+class ValueNode : public Node;
+class Nodes : public Node;
+```
+
+#### 7.1 Node
+
+`Node` 类的实现如下所示：
+
+```cpp {.line-numbers}
+// src/ast/node.hpp
+
+class Node {
+ public:
+  explicit Node(const yy::location& loc) : loc_{loc} {}
+  virtual ~Node() {}
+
+  virtual void UpdateDepth(int depth);
+  virtual void Print(std::ostream& os) const;
+
+  virtual std::string name() const { return name_; }
+  yy::location loc() const { return loc_; }
+  void set_loc(const yy::location& loc) { loc_ = loc; }
+  void set_depth(int depth) { depth_ = depth; }
+
+ protected:
+  void PrintIndent(std::ostream& os) const;
+  void PrintLocation(std::ostream& os) const;
+  void PrintBase(std::ostream& os) const;
+
+ private:
+  const std::string name_ = "node";
+  yy::location loc_;
+  int depth_ = 0;
+};
+```
+
+```cpp {.line-numbers}
+// src/ast/node.cpp
+
+void Node::UpdateDepth(int depth) { set_depth(depth); }
+
+void Node::Print(std::ostream& os) const {
+  PrintBase(os);
+  os << "\n";
+}
+
+void Node::PrintIndent(std::ostream& os) const {
+  os << std::string(depth_ * 2, ' ');
+}
+
+void Node::PrintLocation(std::ostream& os) const {
+  os << "<" << loc_.begin.line << ":" << loc_.begin.column << "-"
+     << loc_.end.line << ":" << loc_.end.column << ">";
+}
+
+void Node::PrintBase(std::ostream& os) const {
+  PrintIndent(os);
+  os << name() << " ";
+  PrintLocation(os);
+}
+```
+
+主要提供了 `Node` 的构造函数和两个方法 `UpdateDepth()` 和 `Print()`。
+
+其中，构造函数传入参数 `loc`，代表 token 目前所在的位置，保存在类中。
+
+函数 `UpdateDepth()` 的作用是为了维护 AST 的树形结构。对于每个节点 `x`，其 `UpdateDepth()` 的逻辑是：传入当前节点的深度 `depth`，更新自己的深度 `depth_`，然后调用所有子节点（如果有）的 `UpdateDepth()`，传入参数 `depth + 1`。具体可以参考下面这个例子（`Body`）：
+
+```cpp {.line-numbers}
+// src/ast/body.cpp
+
+void Body::UpdateDepth(int depth) {
+  Node::UpdateDepth(depth);
+  if (p_decls_) p_decls_->UpdateDepth(depth + 1);
+  if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
+}
+```
+
+其中 `p_decls_` 和 `p_stmts_` 就是该节点的子节点的指针。
+
+在最后打印 AST 前，我们调用一次根节点 `program` 的 `UpdateDepth()`，就可以更新整个 AST 所有节点的深度了。根节点的深度为 `0`，每个子节点的深度都是其父节点的深度加 `1`。
+
+为什么需要这个深度信息呢？主要是为了方便在打印时缩进，从而体现树形结构。我们可以看到在 `PrintIndent()` 函数中，每个节点的缩进大小是 `depth_ * 2` 个空格，于是我们就可以通过缩进大小表示每个节点的深度了。
+
+打印节点时，目前打印的内容是节点的名称 `name_` 和位置 `loc_`。
+
+#### 7.2 ValueNode
+
+`ValueNode` 类的实现如下所示：
+
+```cpp {.line-numbers}
+// src/ast/node.hpp
+
+class ValueNode : public Node {
+ public:
+  explicit ValueNode(const yy::location& loc, const std::string& value = "")
+      : Node{loc}, value_{value} {}
+
+  void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
+  virtual std::string value() const { return value_; }
+
+ private:
+  const std::string name_ = "node";
+  const std::string value_;
+};
+```
+
+```cpp {.line-numbers}
+// src/ast/node.cpp
+
+void ValueNode::Print(std::ostream& os) const {
+  PrintBase(os);
+  os << " " << value() << "\n";
+}
+```
+
+`ValueNode` 比 `Node` 主要就是多保存了一个节点的语义值 `value_`，并围绕 `value_` 新增 / 修改了相关方法。比如构造时多传入一个参数 `value`，打印时多打印一个节点的语义值 `value()`。注意这里的 `value()` 和前面 `Node` 里的 `name()`，它们都是虚函数，因此可以被派生类的实现覆盖。
+
+#### 7.3 Nodes
+
+`Nodes` 类的实现如下所示：
+
+```cpp {.line-numbers}
+// src/ast/node.hpp
+
+class Nodes : public Node {
+ public:
+  explicit Nodes(const yy::location& loc) : Node{loc} {}
+
+  void Insert(SPtr<Node> p_node);
+  void InsertArray(SPtr<Nodes> p_nodes);
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
+
+ private:
+  const std::string name_ = "nodes";
+  std::vector<SPtr<Node>> data_;
+};
+```
+
+```cpp {.line-numbers}
+// src/ast/node.cpp
+
+void Nodes::Insert(SPtr<Node> p_node) {
+  if (p_node) {
+    set_loc(loc() + p_node->loc());
+    data_.push_back(p_node);
+  }
+}
+
+void Nodes::InsertArray(SPtr<Nodes> p_nodes) {
+  if (p_nodes) {
+    for (auto&& p_node : p_nodes->data_) {
+      Insert(p_node);
+    }
+  }
+}
+
+void Nodes::UpdateDepth(int depth) {
+  Node::UpdateDepth(depth);
+  for (auto&& p_node : data_) {
+    if (p_node) p_node->UpdateDepth(depth + 1);
+  }
+}
+
+void Nodes::Print(std::ostream& os) const {
+  if (data_.size()) {
+    Node::Print(os);
+    for (const auto& p_node : data_) {
+      if (p_node) p_node->Print(os);
+    }
+  }
+}
+```
+
+`Nodes` 比 `Node` 主要是多了一个数组成员 `data_`，包含了所有子节点的指针，并围绕 `data_` 新增 / 修改了相关方法。比如提供了插入节点的方法 `Insert()` 和插入另一个数组节点的子节点的方法 `InsertArray()`。注意这里插入节点时会调用 `set_loc()` 自动更新本节点的位置 `loc_`，因此不需要在 Parser 里显式更新了。
+
+这里有一点可以改进的地方是，数组成员 `data_` 的元素类型不应该是 `std::shared_ptr<Node>`，而应该是泛型 `std::shared_ptr<T>` 或者 `T`，然后派生类在继承时特化。我这里是懒了，毕竟不影响结果，只是缺了一个运行时类型检查，缺失了一定的语义（例如 `Lvalues` 类的 `data_` 的元素类型应当只能是 `std::shared_ptr<Lvalue>` 而不能是别的）。
+
+#### 7.4 如何继承
+
+其他节点就是继承自这三个基类了，逻辑上基本没有大的变化，只是针对自己的情形做一些调整。例如：
+
+`Node` 类的派生类（`Body`）：
+
+```cpp {.line-numbers}
+// src/ast/body.hpp
+
+class Body : public Node {
+ public:
+  explicit Body(
+      const yy::location& loc, SPtr<Decls> p_decls, SPtr<Stmts> p_stmts)
+      : Node{loc}, p_decls_{p_decls}, p_stmts_{p_stmts} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
+
+ private:
+  const std::string name_ = "body";
+  SPtr<Decls> p_decls_;
+  SPtr<Stmts> p_stmts_;
+};
+```
+
+```cpp {.line-numbers}
+// src/ast/body.cpp
+
+void Body::UpdateDepth(int depth) {
+  Node::UpdateDepth(depth);
+  if (p_decls_) p_decls_->UpdateDepth(depth + 1);
+  if (p_stmts_) p_stmts_->UpdateDepth(depth + 1);
+}
+
+void Body::Print(std::ostream& os) const {
+  Node::Print(os);
+  if (p_decls_) p_decls_->Print(os);
+  if (p_stmts_) p_stmts_->Print(os);
+}
+```
+
+对函数 `UpdateDepth()`, `Print()`, `name()` 进行了覆盖，同时修改节点名 `name_` 为 `body`。这里为什么需要覆盖 `name()` 函数，是因为基类的 `name()` 只能访问到基类的 `name_`，而不能访问派生类的 `name_`（没有虚成员变量的概念），所以即使 `name()` 的定义是一样的，仍然需要重新定义一遍。
+
+构造时，传入的参数就是该节点的子节点的指针，保存在类中。之后在调用函数 `UpdateDepth()` 和 `Print()` 时，就可以直接向下「递归」了。对于叶节点，函数 `UpdateDepth()` 和 `Print()` 不进行覆盖，而是直接用的基类的实现。
+
+`ValueNode` 类的派生类（`BinaryExpr`）：
+
+```cpp {.line-numbers}
+// src/ast/expr.hpp
+
+class Expr : public ValueNode {
+ public:
+  explicit Expr(const yy::location& loc, const std::string& value = "")
+      : ValueNode{loc, value} {}
+
+  std::string name() const override { return name_; }
+
+ private:
+  const std::string name_ = "expression";
+};
+
+class BinaryExpr : public Expr {
+ public:
+  explicit BinaryExpr(
+      const yy::location& loc,
+      SPtr<Expr> p_expr1,
+      SPtr<Op> p_op,
+      SPtr<Expr> p_expr2)
+      : Expr{loc}, p_expr1_{p_expr1}, p_op_{p_op}, p_expr2_{p_expr2} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
+  std::string value() const override;
+
+ private:
+  const std::string name_ = "binary expression";
+  SPtr<Expr> p_expr1_;
+  SPtr<Op> p_op_;
+  SPtr<Expr> p_expr2_;
+};
+```
+
+```cpp {.line-numbers}
+// src/ast/expr.cpp
+
+void BinaryExpr::UpdateDepth(int depth) {
+  Expr::UpdateDepth(depth);
+  if (p_expr1_) p_expr1_->UpdateDepth(depth + 1);
+  if (p_op_) p_op_->UpdateDepth(depth + 1);
+  if (p_expr2_) p_expr2_->UpdateDepth(depth + 1);
+}
+
+void BinaryExpr::Print(std::ostream& os) const {
+  Expr::Print(os);
+  if (p_expr1_) p_expr1_->Print(os);
+  if (p_op_) p_op_->Print(os);
+  if (p_expr2_) p_expr2_->Print(os);
+}
+
+std::string BinaryExpr::value() const {
+  auto expr1 = p_expr1_ ? p_expr1_->value() : "";
+  auto op = p_op_ ? p_op_->value() : "";
+  auto expr2 = p_expr2_ ? p_expr2_->value() : "";
+  return expr1 + " " + op + " " + expr2;
+}
+```
+
+比起 `Node` 类的派生类，主要是多了一个对函数 `value()` 的覆盖。这个 `value()` 就是节点的语义值。通过这种方式，当 `expr1`, `op`, `expr2` 的语义值分别为 `(1 + 2)`, `*`, `3` 时，我们就可以得到本节点的语义值 `(1 + 2) * 3`。一方面形式上非常统一，另一方面不需要相同实现重复定义，这就是虚函数的妙处。
+
+`Nodes` 类的派生类（`Stmts`）：
+
+```cpp {.line-numbers}
+// src/ast/stmt.hpp
+
+class Stmts : public Nodes {
+ public:
+  explicit Stmts(const yy::location& loc) : Nodes{loc} {}
+
+  std::string name() const override { return name_; }
+
+ private:
+  const std::string name_ = "statement list";
+};
+```
+
+只需要改个名字就可以了，十分方便。
+
+一些特例（`WriteExpr`）：
+
+```cpp {.line-numbers}
+// src/ast/expr.hpp
+
+class WriteExpr : public Expr {
+ public:
+  using UnionPtr = std::variant<SPtr<String>, SPtr<Expr>>;
+
+  explicit WriteExpr(const yy::location& loc, UnionPtr p_write_expr)
+      : Expr{loc}, p_write_expr_{p_write_expr} {}
+
+  void UpdateDepth(int depth) override;
+  void Print(std::ostream& os) const override;
+
+  std::string name() const override { return name_; }
+  std::string value() const override;
+
+ private:
+  const std::string name_ = "write expression";
+  UnionPtr p_write_expr_;
+};
+```
+
+```cpp {.line-numbers}
+// src/base/common.hpp
+
+// Code snippets for visiting std::variant.
+// See: https://en.cppreference.com/w/cpp/utility/variant/visit
+template <class... Ts>
+struct Overloaded : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;
+```
+
+```cpp {.line-numbers}
+// src/ast/expr.cpp
+
+void WriteExpr::UpdateDepth(int depth) {
+  Expr::UpdateDepth(depth);
+  auto visitor = Overloaded{
+      [depth](auto&& p) {
+        if (p) p->UpdateDepth(depth + 1);
+      },
+  };
+  std::visit(visitor, p_write_expr_);
+}
+
+void WriteExpr::Print(std::ostream& os) const {
+  Expr::Print(os);
+  auto visitor = Overloaded{
+      [&os](auto&& p) {
+        if (p) p->Print(os);
+      },
+  };
+  std::visit(visitor, p_write_expr_);
+}
+
+std::string WriteExpr::value() const {
+  auto visitor = Overloaded{
+      [](const auto& p) {
+        auto value = p ? p->value() : "";
+        return value;
+      },
+  };
+  return std::visit(visitor, p_write_expr_);
+}
+```
+
+因为用了 C++17 的高级语法，看起来非常抽象。实际上这个 `WriteExpr` 类干的是这样一个事情：传入一个类型可能是 `SPtr<String>` 也可能是 `SPtr<Expr>` 的参数，并保存在同一个变量 `p_write_expr_` 里；调用时，动态判断实际保存的是哪一个类型，并进行相应的操作。没错，`p_write_expr_` 的本质约等于是一个 C 语言的 union。但 union 大概只能用于 POD 类型（或许存在一些奇技淫巧），因此这里我们使用了 C++17 的 `std::variant` 类型，提供了对非 POD 类型的支持。至于 `std::visit`，就是访问这个 `std::variant` 的手段了，具体建议参考 cppreference，这里不作赘述。
+
+为什么要这样设计？没办法嘛，产生式就是这样写的。正常来说，普通的方式应该是让 `String` 和 `Expr` 都继承 `WriteExpr`，这样就可以将 `String` 和 `Expr` 的指针赋值给 `WriteExpr` 的指针了。但显然不是那么回事，不能这样继承。所以只能这样写了。
+
+#### 7.5 继承关系
+
+下面我在这里统一列一下所有类之间的继承关系。
+
+三个基类（[src/ast/node.hpp](../src/ast/node.hpp)）：
+
+```cpp {.line-numbers}
+class ValueNode : public Node;
+class Nodes : public Node;
+```
+
+`body`（[src/ast/body.hpp](../src/ast/body.hpp)）：
+
+```cpp {.line-numbers}
+class Body : public Node;
+```
+
+所有常量类（[src/ast/constant.hpp](../src/ast/constant.hpp)）：
+
+```cpp {.line-numbers}
+template <class T> class Constant : public Node;
+class Integer : public Constant<std::string>;
+class Real : public Constant<std::string>;
+class Number : public ValueNode;
+class String : public Constant<std::string>;
+```
+
+这里本来 `Integer` 和 `Real` 是继承自 `Constant<int32_t>` 和 `Constant<double>` 的，这也是为什么 `Constant` 被声明成一个模板类。在 4.2 节我们解释过为什么后来改成了 `Constant<std::string>`。
+
+所有声明类（[src/ast/decl.hpp](../src/ast/decl.hpp)）：
+
+```cpp {.line-numbers}
+class Decl : public Node;
+class Decls : public Nodes;
+class VarDecl : public Decl;
+class VarDecls : public Decls;
+class TypeDecl : public Decl;
+class TypeDecls : public Decls;
+class ProcDecl : public Decl;
+class ProcDecls : public Decls;
+```
+
+所有表达式类（[src/ast/expr.hpp](../src/ast/expr.hpp)）：
+
+```cpp {.line-numbers}
+class Expr : public ValueNode;
+class Exprs : public Nodes;
+class NumberExpr : public Expr;
+class LvalueExpr : public Expr;
+class ParenExpr : public Expr;
+class UnaryExpr : public Expr;
+class BinaryExpr : public Expr;
+class ProcCallExpr : public Expr;
+class AssignExpr : public Expr;
+class AssignExprs : public Exprs;
+class CompValues : public Node;
+class RecordConstrExpr : public Expr;
+class ArrayExpr : public Expr;
+class ArrayExprs : public Exprs;
+class ArrayValues : public Node;
+class ArrayConstrExpr : public Expr;
+class WriteExpr : public Expr;
+class WriteExprs : public Exprs;
+```
+
+`identifier`（[src/ast/identifier.hpp](../src/ast/identifier.hpp)）：
+
+```cpp {.line-numbers}
+class Id : public ValueNode;
+class Ids : public Nodes;
+```
+
+所有左值类（[src/ast/lvalue.hpp](../src/ast/lvalue.hpp)）：
+
+```cpp {.line-numbers}
+class Lvalue : public ValueNode;
+class Lvalues : public Nodes;
+class IdLvalue : public Lvalue;
+class ArrayElemLvalue : public Lvalue;
+class RecordCompLvalue : public Lvalue;
+```
+
+`operator`（[src/ast/operator.hpp](../src/ast/operator.hpp)）：
+
+```cpp {.line-numbers}
+class Op : public ValueNode;
+```
+
+所有参数类（[src/ast/param.hpp](../src/ast/param.hpp)）：
+
+```cpp {.line-numbers}
+class Param : public Node;
+class Params : public Nodes;
+class FormalParam : public Param;
+class FormalParams : public Params;
+class ActualParams : public Exprs;
+class ReadParams : public Lvalues;
+class WriteParams : public WriteExprs;
+```
+
+`program`（[src/ast/program.hpp](../src/ast/program.hpp)）：
+
+```cpp {.line-numbers}
+class Program : public Node;
+```
+
+所有语句类（[src/ast/stmt.hpp](../src/ast/stmt.hpp)）：
+
+```cpp {.line-numbers}
+class Stmt : public Node;
+class Stmts : public Nodes;
+class AssignStmt : public Stmt;
+class ProcCallStmt : public Stmt;
+class ReadStmt : public Stmt;
+class WriteStmt : public Stmt;
+class ElifSection : public Node;
+class ElifSections : public Nodes;
+class ElseSection : public Node;
+class IfStmt : public Stmt;
+class WhileStmt : public Stmt;
+class LoopStmt : public Stmt;
+class ForStep : public Node;
+class ForStmt : public Stmt;
+class ExitStmt : public Stmt;
+class ReturnStmt : public Stmt;
+```
+
+所有类型类（[src/ast/type.hpp](../src/ast/type.hpp)）：
+
+```cpp {.line-numbers}
+class Type : public Node;
+class TypeAnnot : public Node;
+class Component : public Node;
+class Components : public Nodes;
+class IdType : public Type;
+class ArrayType : public Type;
+class RecordType : public Type;
 ```
 
 ## 贡献者
