@@ -20,6 +20,10 @@
       - [4.2 Bison declaration](#42-bison-declaration)
       - [4.3 Grammar rules](#43-grammar-rules)
       - [4.4 Epilogue](#44-epilogue)
+    - [5. 对 Flex 的修改](#5-对-flex-的修改)
+    - [6. 错误检测与报错](#6-错误检测与报错)
+      - [6.1 词法错误](#61-词法错误)
+      - [6.2 语法错误](#62-语法错误)
   - [贡献者](#贡献者)
   - [许可协议](#许可协议)
   
@@ -804,6 +808,154 @@ void Logger::Error(
 #define RED "\e[0;31m"
 #define RESET "\e[0;0m"
 ```
+
+### 5. 对 Flex 的修改
+
+<!-- 记得提交家里电脑上的 commit -->
+
+此外，之前提到 Lexer 现在需要返回一个 `symbol_type` 而不是 `int`，这部分逻辑我们是通过 Bison 的 token constructor 接口实现的。具体来说，原本我们是以枚举的形式定义所有的 token 类型：
+
+```cpp {.line-numbers}
+// https://github.com/hakula139/pcat_lexical_analyzer/blob/master/src/lexer.hpp
+
+enum Tokens {
+  T_EOF = 0,
+  T_WS,
+  T_NEWLINE,
+  T_INTEGER,
+  T_REAL,
+  T_STRING,
+  T_RESERVED,
+  T_IDENTIFIER,
+  T_OPERATOR,
+  T_DELIMITER,
+  T_COMMENTS_BEGIN,
+  T_COMMENTS,
+  T_COMMENTS_END,
+};
+```
+
+现在则是调用 Bison 自动生成的 `yy::Parser::make_<TOKEN>` 函数实现，传入的参数是 token 的语义值和 token 的位置。这个函数将为我们生成正确的 `symbol_type`，并会进行类型检查。例如：
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+DIGIT                 [0-9]
+REAL                  ({DIGIT}+"."{DIGIT}*)
+
+%%
+
+<INITIAL>{REAL}               { return yy::Parser::make_REAL(YYText(), loc); }
+```
+
+这里 `YYText()` 返回的就是 Lexer 读取到的 token 字符串。因为我们之前定义的 `REAL` 的语义值类型就是 `std::string`，所以这里不需要进行转换。如果定义的类型是 `double`，则需要通过 `std::stod()` 转换。如果 token 没有定义类型，则不需要传入这个参数。`loc` 就是我们维护的 token 始末位置。
+
+关于如何实现词法错误的报错，我们将在下个章节统一讲解。得益于 Bison 的异常捕获机制，这次我们采取了和上个项目不同的报错实现方式。
+
+### 6. 错误检测与报错
+
+Bison 的错误处理是通过捕获 `yy::Parser::syntax_error` 异常来实现的，这里 `yy::Parser::syntax_error` 是基于 `std::runtime_error` 的一个派生类。当分析过程中出现语法错误时，程序就会抛出一个 `yy::Parser::syntax_error` 异常，Bison 会进行捕获，然后调用 `yy::Parser::error()` 函数进行报错。这个函数我们已经在 `src/parser.yy` 的 Epilogue 部分提供了定义。
+
+#### 6.1 词法错误
+
+我们可以利用这个机制，让 Bison 对词法错误进行同样的错误处理。方法就是在 Flex 检测到词法错误时，同样抛出一个 `yy::Parser::syntax_error` 异常。具体来说，例如对于 `INTEGER` 的词法错误检测，我们可以这样实现：
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+%{
+symbol_type make_INTEGER(const std::string& s, const location_type& loc);
+}%
+
+DIGIT                 [0-9]
+INTEGER               ({DIGIT}+)
+
+%%
+
+<INITIAL>{INTEGER}            { return make_INTEGER(YYText(), loc); }
+
+%%
+
+symbol_type make_INTEGER(const std::string& s, const location_type& loc) {
+  try {
+    std::stoi(s);
+  } catch (const std::out_of_range& e) {
+    throw yy::Parser::syntax_error(loc, "range error, integer out of range: " + s);
+  }
+  return yy::Parser::make_INTEGER(s, loc);
+}
+```
+
+这里我们定义了一个自己的 `make_INTEGER()` 函数，用于在返回 token 前额外进行一些错误检测。具体的检测方法和上个项目是基本一致的，区别在于遇到词法错误时，这次我们直接抛出一个 `yy::Parser::syntax_error` 异常，传入的参数是 token 的位置和报错信息。这样我们就实现了对 Bison 语法错误处理机制的复用。
+
+对于直接的词法错误也是类似的处理：
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+%{
+void panic_UNTERM_STRING(const std::string& s, const location_type& loc);
+}%
+
+UNTERM_STRING         (\"[^\n"]*)
+
+%%
+
+<INITIAL>{UNTERM_STRING}      { panic_UNTERM_STRING(YYText(), loc); }
+
+%%
+
+void panic_UNTERM_STRING(const std::string& s, const location_type& loc) {
+  throw yy::Parser::syntax_error(
+      loc, "syntax error, unterminated string literal: " + s);
+}
+```
+
+#### 6.2 语法错误
+
+当 Bison 遇到语法错误时，会自动抛出 `yy::Parser::syntax_error` 异常，因此不需要我们显式地写报错逻辑（只需要定义 `yy::Parser::error()` 函数）。
+
+这里的难点其实不在报错，而是在于错误恢复。一方面，如果我们不进行错误恢复，Bison 会在遇到第一处语法错误后直接退出程序，我们当然希望程序能尽可能一次性爆出所有错误；另一方面，如果我们只是简单地在根节点处加上错误恢复逻辑，那就会产生很多不必要的报错信息，无法做到对错误的精确定位。因此，我们有必要 case by case 地对非终结符编写错误恢复逻辑。
+
+然而，为每个非终结符的每个产生式都编写完善的错误恢复逻辑是非常困难且耗时的。由于时间有限，这里我们只针对测试样例编写了必要的错误恢复逻辑，仅确保对测试样例可以进行正确、精准的报错。当然，对测试样例以外的代码程序也会进行「正确」的报错，只是会产生不必要的报错信息。例如一行代码末尾少一个分号，导致包括这行代码在内的之后所有代码全部报错。
+
+由于样例 `tests/case_11.pcat` 不是一个完整的程序，其重点在于对词法错误处理进行测试，为了让报错信息尽可能简明直观，这里对 `program` 的错误恢复逻辑做了一定的特判。
+
+下面我们来看一些具体的例子：
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+program:
+  PROGRAM IS body SEMICOLON {
+    $$ = make_shared<Program>(@$, $body);
+    p_driver->set_program($$);
+  }
+| error body SEMICOLON {
+    $$ = make_shared<Program>(@$, $body);
+    p_driver->set_program($$);
+    yyerrok;
+  }
+| error { $$ = nullptr; yyerrok; yyclearin; }
+;
+```
+
+这里，`error body SEMICOLON` 将语法错误视作一个 token（`error`）。通过这样的产生式可以让程序检测到错误后，能继续对后续输入进行语法分析（相当于假装这里没有发生错误）。例如这里就是尝试按照 `body SEMICOLON` 分析之后的输入。
+
+动作里的 `yyerrok` 表示立即报错，并继续进行语法分析。继续分析时，程序默认会重新分析这次读入的 lookahead token，但有时这会导致程序出现死循环，`yyclearin` 的作用就是丢弃这个 token，直接读取下一个 token，从而避免这种情形。这里 `error { $$ = nullptr; yyerrok; yyclearin; }` 语句就是之前提到的对 `tests/case_11.pcat` 的特判。
+
+```cpp {.line-numbers}
+// src/parser.yy
+
+var_decl:
+  ids type_annot ASSIGN expr SEMICOLON {
+    $$ = make_shared<VarDecl>(@$, $ids, $type_annot, $expr);
+  }
+| error SEMICOLON { $$ = nullptr; yyerrok; }
+;
+```
+
+像这个错误恢复逻辑就很典型，就是当一条 `var_decl` 语句的结尾少一个分号时，舍弃接下来所有的 token，直到读到分号为止。读到分号后，错误恢复，继续进行接下来的语法分析。通常情况下，这样可以将一次错误造成的影响限制在尽量小的范围。
 
 ## 贡献者
 
