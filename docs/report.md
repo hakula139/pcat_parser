@@ -20,7 +20,9 @@
       - [4.2 Bison declaration](#42-bison-declaration)
       - [4.3 Grammar rules](#43-grammar-rules)
       - [4.4 Epilogue](#44-epilogue)
-    - [5. 对 Flex 的修改](#5-对-flex-的修改)
+    - [5. 对 Flex 文件的修改](#5-对-flex-文件的修改)
+      - [5.1 位置追踪](#51-位置追踪)
+      - [5.2 Token 类型](#52-token-类型)
     - [6. 错误检测与报错](#6-错误检测与报错)
       - [6.1 词法错误](#61-词法错误)
       - [6.2 语法错误](#62-语法错误)
@@ -819,9 +821,75 @@ void Logger::Error(
 #define RESET "\e[0;0m"
 ```
 
-### 5. 对 Flex 的修改
+### 5. 对 Flex 文件的修改
 
-<!-- 记得提交家里电脑上的 commit -->
+由于现在我们使用 Bison 进行语法分析，在接入 Flex 作为词法分析器时，需要做一定的调整。
+
+#### 5.1 位置追踪
+
+在之前的实现中，我们基本是手动维护的位置信息。现在 Bison 提供了十分强大的 location 接口，我们自然也要利用起来。
+
+具体来说，我们需要定义宏 `YY_USER_ACTION`。
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+%{
+#define YY_USER_ACTION loc.step(); loc += YYLeng();
+%}
+
+%%
+
+%{
+  auto& loc = drv_.loc();
+%}
+```
+
+`YY_USER_ACTION` 将在每次 Lexer 读取一个 token 后执行一次。其中 `loc.step()` 将当前 `loc` 的 `begin` 设置为 `end`，`loc += YYLeng()` 将当前 `loc` 的 `end.column` 增加一个 `YYLeng()`，也就是当前 token 的长度。于是，我们就得到了当前 token 的始末位置。这里 `drv_` 就是之前提到的 `Lexer` 在继承 `yyFlexLexer` 时保存的额外私有成员 `Driver& drv_`。
+
+对于换行的情况，我们在遇到换行符 `\n` 时利用 `loc.lines()` 将当前 `loc` 的 `end.line` 加 `1`、`end.column` 设置为 `1`，从而实现了行号的更新。
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+NEWLINE               \n
+
+%%
+
+<INITIAL>{NEWLINE}            { loc.lines(); }
+```
+
+对于多行注释其实也是一样的处理。这里的细节已经在上份词法分析的报告里解释过了，这里不再赘述。
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+<COMMENT>{NEWLINE}            { loc.lines(); skip_COMMENTS(YYText(), loc); }
+```
+
+这里函数 `skip_COMMENTS()` 主要是为了保存注释内容用的。如果你不打算报错（unterminated comments）时在错误信息里打印注释内容，就没必要定义这个函数，直接跳过注释就可以了。
+
+```cpp {.line-numbers}
+// src/lexer.lex
+
+void skip_COMMENTS(const std::string& s, const location_type& loc) {
+  static std::string comments_buf;
+  static location_type comments_loc;
+
+  if (s == "(*") {
+    comments_buf = s;
+    comments_loc = loc;
+  } else if (!s.empty()) {
+    comments_buf += s;
+    comments_loc += loc;
+  } else {
+    throw yy::Parser::syntax_error(
+        comments_loc, "syntax error, unterminated comments: " + comments_buf);
+  }
+}
+```
+
+#### 5.2 Token 类型
 
 此外，之前提到 Lexer 现在需要返回一个 `symbol_type` 而不是 `int`，这部分逻辑我们是通过 Bison 的 token constructor 接口实现的。具体来说，原本我们是以枚举的形式定义所有的 token 类型：
 
